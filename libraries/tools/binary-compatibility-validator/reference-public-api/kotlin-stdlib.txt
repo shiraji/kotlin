@@ -1583,6 +1583,10 @@ public final class kotlin/concurrent/TimersKt {
 	public static final fun timer (Ljava/lang/String;Z)Ljava/util/Timer;
 }
 
+public final class kotlin/internal/PlatformImplementationsKt {
+	public static final fun platformCloseSuppressed (Ljava/io/Closeable;Ljava/lang/Throwable;)V
+}
+
 public final class kotlin/io/AccessDeniedException : kotlin/io/FileSystemException {
 	public fun <init> (Ljava/io/File;Ljava/io/File;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/io/File;Ljava/io/File;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -2084,6 +2088,19 @@ public abstract interface class kotlin/text/MatchGroupCollection : java/util/Col
 	public abstract fun addAll (Ljava/util/Collection;)Z
 	public abstract fun clear ()V
 	public abstract fun get (I)Lkotlin/text/MatchGroup;
+	public abstract fun iterator ()Ljava/util/Iterator;
+	public abstract fun remove (Ljava/lang/Object;)Z
+	public abstract fun remove (Lkotlin/text/MatchGroup;)Z
+	public abstract fun removeAll (Ljava/util/Collection;)Z
+	public abstract fun retainAll (Ljava/util/Collection;)Z
+}
+
+public abstract interface class kotlin/text/MatchNamedGroupCollection : kotlin/text/MatchGroupCollection {
+	public abstract synthetic fun add (Ljava/lang/Object;)Z
+	public abstract fun add (Lkotlin/text/MatchGroup;)Z
+	public abstract fun addAll (Ljava/util/Collection;)Z
+	public abstract fun clear ()V
+	public abstract fun get (Ljava/lang/String;)Lkotlin/text/MatchGroup;
 	public abstract fun iterator ()Ljava/util/Iterator;
 	public abstract fun remove (Ljava/lang/Object;)Z
 	public abstract fun remove (Lkotlin/text/MatchGroup;)Z

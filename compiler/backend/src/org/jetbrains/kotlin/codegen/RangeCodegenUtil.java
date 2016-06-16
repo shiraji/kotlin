@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.resolve.BindingContext;
 import org.jetbrains.kotlin.resolve.DescriptorUtils;
 import org.jetbrains.kotlin.resolve.calls.callUtil.CallUtilKt;
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall;
+import org.jetbrains.kotlin.resolve.calls.model.ResolvedValueArgument;
 import org.jetbrains.kotlin.types.KotlinType;
 
 import java.util.Arrays;
@@ -132,25 +133,26 @@ public class RangeCodegenUtil {
         return false;
     }
 
-    public static boolean isArrayOrPrimitiveArrayIndices(@NotNull CallableDescriptor descriptor) {
-        if (!isTopLevelInPackage(descriptor, "indices", "kotlin.collections")) return false;
+    public static boolean isOptimizableUntil(CallableDescriptor descriptor) {
+        if (!isTopLevelInPackage(descriptor, "until", "kotlin.ranges")) return false;
 
         ReceiverParameterDescriptor extensionReceiver = descriptor.getExtensionReceiverParameter();
         if (extensionReceiver == null) return false;
         KotlinType extensionReceiverType = extensionReceiver.getType();
-        if (!KotlinBuiltIns.isArray(extensionReceiverType) && !KotlinBuiltIns.isPrimitiveArray(extensionReceiverType)) return false;
+        if (!KotlinBuiltIns.isPrimitiveType(extensionReceiverType)) return false;
 
+        return true;
+    }
+
+    public static boolean isArrayOrPrimitiveArrayIndices(@NotNull CallableDescriptor descriptor) {
+        if (!isTopLevelInPackage(descriptor, "indices", "kotlin.collections")) return false;
+        if (!isWithArrayExtensionReceiver(descriptor)) return false;
         return true;
     }
 
     public static boolean isCollectionIndices(@NotNull CallableDescriptor descriptor) {
         if (!isTopLevelInPackage(descriptor, "indices", "kotlin.collections")) return false;
-
-        ReceiverParameterDescriptor extensionReceiver = descriptor.getExtensionReceiverParameter();
-        if (extensionReceiver == null) return false;
-        KotlinType extensionReceiverType = extensionReceiver.getType();
-        if (!KotlinBuiltIns.isCollectionOrNullableCollection(extensionReceiverType)) return false;
-
+        if (!isWithCollectionExtensionReceiver(descriptor)) return false;
         return true;
     }
 
@@ -163,5 +165,27 @@ public class RangeCodegenUtil {
         if (!packageName.equals(packageFqName)) return false;
 
         return true;
+    }
+
+    private static boolean isWithCollectionExtensionReceiver(@NotNull CallableDescriptor descriptor) {
+        ReceiverParameterDescriptor extensionReceiver = descriptor.getExtensionReceiverParameter();
+        if (extensionReceiver == null) return false;
+        KotlinType extensionReceiverType = extensionReceiver.getType();
+        if (!KotlinBuiltIns.isCollectionOrNullableCollection(extensionReceiverType)) return false;
+        return true;
+    }
+
+    private static boolean isWithArrayExtensionReceiver(@NotNull CallableDescriptor descriptor) {
+        ReceiverParameterDescriptor extensionReceiver = descriptor.getExtensionReceiverParameter();
+        if (extensionReceiver == null) return false;
+        KotlinType extensionReceiverType = extensionReceiver.getType();
+        if (!KotlinBuiltIns.isArray(extensionReceiverType) && !KotlinBuiltIns.isPrimitiveArray(extensionReceiverType)) return false;
+        return true;
+    }
+
+    public static KtExpression getFirstArgumentExpression(@NotNull ResolvedCall<? extends CallableDescriptor> resolvedCall) {
+        List<ResolvedValueArgument> valueArgumentsByIndex = resolvedCall.getValueArgumentsByIndex();
+        if (valueArgumentsByIndex == null || valueArgumentsByIndex.isEmpty()) return null;
+        return valueArgumentsByIndex.get(0).getArguments().get(0).getArgumentExpression();
     }
 }

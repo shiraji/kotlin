@@ -1,4 +1,6 @@
-fun Int.until(other: Int) = this..other - 1
+// NB shadows kotlin.ranges.unfil, which is intrinsified in 'for'.
+infix fun Int.until(other: Int) = this..other - 1
+
 fun foo() {
     for (i in 1 until 2) {
     }

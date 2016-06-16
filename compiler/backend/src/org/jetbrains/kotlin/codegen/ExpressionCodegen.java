@@ -572,21 +572,10 @@ public class ExpressionCodegen extends KtVisitor<StackValue, StackValue> impleme
 
     @Override
     public StackValue visitForExpression(@NotNull KtForExpression forExpression, StackValue receiver) {
-        ResolvedCall<? extends CallableDescriptor> loopRangeCall = RangeCodegenUtil.getLoopRangeResolvedCall(forExpression, bindingContext);
-        if (loopRangeCall != null) {
-            CallableDescriptor loopRangeCallee = loopRangeCall.getResultingDescriptor();
-            if (RangeCodegenUtil.isOptimizableRangeTo(loopRangeCallee)) {
-                generateForLoop(createForInRangeLiteralLoopGenerator(forExpression, loopRangeCall));
-                return StackValue.none();
-            }
-            else if (RangeCodegenUtil.isArrayOrPrimitiveArrayIndices(loopRangeCallee)) {
-                generateForLoop(createForInArrayIndicesRangeLoopGenerator(forExpression, loopRangeCall));
-                return StackValue.none();
-            }
-            else if (RangeCodegenUtil.isCollectionIndices(loopRangeCallee)) {
-                generateForLoop(createForInCollectionIndicesRangeLoopGenerator(forExpression, loopRangeCall));
-                return StackValue.none();
-            }
+        AbstractForLoopGenerator optimizedForLoopGenerator = getOptimizedForLoopGeneratorOrNull(forExpression);
+        if (optimizedForLoopGenerator != null) {
+            generateForLoop(optimizedForLoopGenerator);
+            return StackValue.none();
         }
 
         KtExpression loopRange = forExpression.getLoopRange();
@@ -613,31 +602,37 @@ public class ExpressionCodegen extends KtVisitor<StackValue, StackValue> impleme
         return StackValue.none();
     }
 
-    private AbstractForLoopGenerator createForInRangeLiteralLoopGenerator(
-            @NotNull KtForExpression forExpression,
-            @NotNull ResolvedCall<? extends CallableDescriptor> loopRangeCall
-    ) {
-        ReceiverValue from = loopRangeCall.getDispatchReceiver();
-        KtExpression to = loopRangeCall.getValueArgumentsByIndex().get(0).getArguments().get(0).getArgumentExpression();
-        return new ForInRangeLiteralLoopGenerator(forExpression, from, to);
-    }
-
-    private AbstractForLoopGenerator createForInCollectionIndicesRangeLoopGenerator(
-            @NotNull KtForExpression forExpression,
-            @NotNull ResolvedCall<? extends CallableDescriptor> loopRangeCall
-    ) {
-        ReceiverValue extensionReceiver = loopRangeCall.getExtensionReceiver();
-        assert extensionReceiver != null : "Extension receiver should be non-null for optimizable 'indices' call";
-        return new ForInCollectionIndicesRangeLoopGenerator(forExpression, extensionReceiver);
-    }
-
-    private AbstractForLoopGenerator createForInArrayIndicesRangeLoopGenerator(
-            @NotNull KtForExpression forExpression,
-            @NotNull ResolvedCall<? extends CallableDescriptor> loopRangeCall
-    ) {
-        ReceiverValue extensionReceiver = loopRangeCall.getExtensionReceiver();
-        assert extensionReceiver != null : "Extension receiver should be non-null for optimizable 'indices' call";
-        return new ForInArrayIndicesRangeLoopGenerator(forExpression, extensionReceiver);
+    @Nullable
+    private AbstractForLoopGenerator getOptimizedForLoopGeneratorOrNull(@NotNull KtForExpression forExpression) {
+        ResolvedCall<? extends CallableDescriptor> loopRangeCall = RangeCodegenUtil.getLoopRangeResolvedCall(forExpression, bindingContext);
+        if (loopRangeCall != null) {
+            CallableDescriptor loopRangeCallee = loopRangeCall.getResultingDescriptor();
+            if (RangeCodegenUtil.isOptimizableRangeTo(loopRangeCallee)) {
+                ReceiverValue from = loopRangeCall.getDispatchReceiver();
+                assert from != null : "Dispatch receiver should be non-null for optimizable 'rangeTo' call";
+                KtExpression to = RangeCodegenUtil.getFirstArgumentExpression(loopRangeCall);
+                assert to != null : "1st value argument should be non-null for optimizable 'rangeTo' call";;
+                return new ForInRangeLiteralLoopGenerator(forExpression, from, to);
+            }
+            else if (RangeCodegenUtil.isOptimizableUntil(loopRangeCallee)) {
+                ReceiverValue from = loopRangeCall.getExtensionReceiver();
+                assert from != null : "Dispatch receiver should be non-null for optimizable 'until' call";
+                KtExpression to = RangeCodegenUtil.getFirstArgumentExpression(loopRangeCall);
+                assert to != null : "1st value argument should be non-null for optimizable 'until' call";;
+                return new ForInUntilRangeLoopGenerator(forExpression, from, to);
+            }
+            else if (RangeCodegenUtil.isArrayOrPrimitiveArrayIndices(loopRangeCallee)) {
+                ReceiverValue extensionReceiver = loopRangeCall.getExtensionReceiver();
+                assert extensionReceiver != null : "Extension receiver should be non-null for optimizable 'indices' call";
+                return new ForInArrayIndicesRangeLoopGenerator(forExpression, extensionReceiver);
+            }
+            else if (RangeCodegenUtil.isCollectionIndices(loopRangeCallee)) {
+                ReceiverValue extensionReceiver = loopRangeCall.getExtensionReceiver();
+                assert extensionReceiver != null : "Extension receiver should be non-null for optimizable 'indices' call";
+                return new ForInCollectionIndicesRangeLoopGenerator(forExpression, extensionReceiver);
+            }
+        }
+        return null;
     }
 
     private OwnerKind contextKind() {
@@ -1093,6 +1088,105 @@ public class ExpressionCodegen extends KtVisitor<StackValue, StackValue> impleme
         protected void storeRangeStartAndEnd() {
             loopParameter().store(generateReceiverValue(from, false), v);
             StackValue.local(endVar, asmElementType).store(gen(to), v);
+        }
+    }
+
+    private static final Type EXCEPTION_TO_THROW_IN_UNTIL = Type.getObjectType("java/lang/IllegalArgumentException");
+
+    private class ForInUntilRangeLoopGenerator extends AbstractForInRangeLoopGenerator {
+        private final ReceiverValue from;
+        private final KtExpression to;
+
+        private ForInUntilRangeLoopGenerator(
+                @NotNull KtForExpression forExpression,
+                @NotNull ReceiverValue from,
+                @NotNull KtExpression to
+        ) {
+            super(forExpression);
+            this.from = from;
+            this.to = to;
+        }
+
+        @Override
+        protected void storeRangeStartAndEnd() {
+            loopParameter().store(generateReceiverValue(from, false), v);
+            gen(to, asmElementType);
+
+            genArgumentCheckIfRequired();
+
+            if (asmElementType == Type.INT_TYPE || asmElementType == Type.CHAR_TYPE) {
+                v.iconst(1);
+                v.sub(Type.INT_TYPE);
+            }
+            else if (asmElementType == Type.LONG_TYPE) {
+                v.lconst(1);
+                v.sub(Type.LONG_TYPE);
+            }
+            else {
+                throw new AssertionError("Unexpected element type: " + asmElementType);
+            }
+
+            StackValue.local(endVar, asmElementType).store(StackValue.onStack(asmElementType), v);
+        }
+
+        private void genArgumentCheckIfRequired() {
+            Type asmFromType = asmType(from.getType());
+            KotlinType toType = bindingContext.getType(to);
+            assert toType != null;
+            Type asmToType = asmType(toType);
+            if (getRelativeTypeSize(asmFromType) > getRelativeTypeSize(asmToType)) return;
+
+            AsmUtil.dup(v, asmElementType);
+
+            Label checkSucceeded = new Label();
+
+            String prohibitedValueStr = null;
+
+            if (asmToType == Type.BYTE_TYPE) {
+                v.iconst(Byte.MIN_VALUE);
+                v.ificmpne(checkSucceeded);
+                prohibitedValueStr = Integer.toString(Byte.MIN_VALUE);
+            }
+            else if (asmToType == Type.SHORT_TYPE) {
+                v.iconst(Short.MIN_VALUE);
+                v.ificmpne(checkSucceeded);
+                prohibitedValueStr = Integer.toString(Short.MIN_VALUE);
+            }
+            else if (asmToType == Type.INT_TYPE) {
+                v.iconst(Integer.MIN_VALUE);
+                v.ificmpne(checkSucceeded);
+                prohibitedValueStr = Integer.toString(Integer.MIN_VALUE);
+            }
+            else if (asmToType == Type.LONG_TYPE) {
+                v.lconst(Long.MIN_VALUE);
+                v.lcmp();
+                v.ifne(checkSucceeded);
+                prohibitedValueStr = Long.toString(Long.MIN_VALUE);
+            }
+            else if (asmToType == Type.CHAR_TYPE) {
+                v.iconst(Character.MIN_VALUE);
+                v.ificmpne(checkSucceeded);
+                prohibitedValueStr = Character.toString(Character.MIN_VALUE);
+            }
+            else {
+                throw new AssertionError("Unexpected 'to' type: " + asmToType);
+            }
+
+            v.anew(EXCEPTION_TO_THROW_IN_UNTIL);
+            v.dup();
+            v.aconst("The to argument value '" + prohibitedValueStr + "' was too small.");
+            v.invokespecial(EXCEPTION_TO_THROW_IN_UNTIL.getInternalName(), "<init>", "(Ljava/lang/String;)V", false);
+            v.athrow();
+
+            v.mark(checkSucceeded);
+        }
+
+        private int getRelativeTypeSize(Type type) {
+            if (type == Type.BYTE_TYPE) return 1;
+            if (type == Type.SHORT_TYPE) return 2;
+            if (type == Type.INT_TYPE) return 3;
+            if (type == Type.LONG_TYPE) return 4;
+            return 0; // other types don't matter in this comparison
         }
     }
 

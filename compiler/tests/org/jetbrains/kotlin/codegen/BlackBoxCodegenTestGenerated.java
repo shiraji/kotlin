@@ -10750,6 +10750,51 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             }
         }
 
+        @TestMetadata("compiler/testData/codegen/box/ranges/forInUntil")
+        @TestDataPath("$PROJECT_ROOT")
+        @RunWith(JUnit3RunnerWithInners.class)
+        public static class ForInUntil extends AbstractBlackBoxCodegenTest {
+            public void testAllFilesPresentInForInUntil() throws Exception {
+                KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/codegen/box/ranges/forInUntil"), Pattern.compile("^(.+)\\.kt$"), true);
+            }
+
+            @TestMetadata("forCharInCheckedUntil.kt")
+            public void testForCharInCheckedUntil() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/ranges/forInUntil/forCharInCheckedUntil.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("forInCheckedUntilWithException.kt")
+            public void testForInCheckedUntilWithException() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/ranges/forInUntil/forInCheckedUntilWithException.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("forIntInCheckedUntil.kt")
+            public void testForIntInCheckedUntil() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/ranges/forInUntil/forIntInCheckedUntil.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("forLongInCheckedUntil.kt")
+            public void testForLongInCheckedUntil() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/ranges/forInUntil/forLongInCheckedUntil.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("forLongInUncheckedUntil.kt")
+            public void testForLongInUncheckedUntil() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/ranges/forInUntil/forLongInUncheckedUntil.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("forNullableIntInCheckedUntil.kt")
+            public void testForNullableIntInCheckedUntil() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/ranges/forInUntil/forNullableIntInCheckedUntil.kt");
+                doTest(fileName);
+            }
+        }
+
         @TestMetadata("compiler/testData/codegen/box/ranges/literal")
         @TestDataPath("$PROJECT_ROOT")
         @RunWith(JUnit3RunnerWithInners.class)

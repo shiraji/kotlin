@@ -1721,6 +1721,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                     KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/diagnostics/tests/callableReference/bound"), Pattern.compile("^(.+)\\.kt$"), true);
                 }
 
+                @TestMetadata("classVsStarImportedObject.kt")
+                public void testClassVsStarImportedObject() throws Exception {
+                    String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/callableReference/bound/classVsStarImportedObject.kt");
+                    doTest(fileName);
+                }
+
                 @TestMetadata("companionObject.kt")
                 public void testCompanionObject() throws Exception {
                     String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/callableReference/bound/companionObject.kt");

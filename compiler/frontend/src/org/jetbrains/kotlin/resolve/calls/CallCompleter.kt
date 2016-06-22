@@ -174,7 +174,7 @@ class CallCompleter(
         val expectedReturnType =
                 if (isResolvingCallableReference(call)) {
                     // TODO: also add constraints for parameter types, if we're resolving a callable reference
-                    if (!TypeUtils.noExpectedType(expectedType) && expectedType.isFunctionType) getReturnTypeFromFunctionType(expectedType)
+                    if (!TypeUtils.noExpectedType(expectedType) && expectedType.isFunctionType /* TODO: Function<R> */) getReturnTypeFromFunctionType(expectedType)
                     else TypeUtils.NO_EXPECTED_TYPE
                 }
                 else expectedType

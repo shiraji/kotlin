@@ -5,9 +5,14 @@ class Controller {
     }
 }
 
+//fun builder(c: Controller.() -> Unit) {
+//    //c(Controller()).resume(Unit)
+//}
+
 fun builder(coroutine c: Controller.() -> Continuation<Unit>) {
     c(Controller()).resume(Unit)
 }
+
 
 inline fun run(block: () -> Unit) {
     block()
@@ -17,13 +22,11 @@ fun box(): String {
     var result = ""
     run {
         builder {
-            try {
-                result += suspendHere("O")
-            } finally {
-                result += suspendHere("K")
-            }
+            result += ""
         }
     }
+
+
 
     return result
 }

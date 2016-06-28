@@ -35,6 +35,8 @@ public class InliningContext {
     public final ReifiedTypeInliner reifiedTypeInliner;
     public final boolean isInliningLambda;
     public final boolean classRegeneration;
+    public final Map<String, AnonymousObjectTransformationInfo> internalNameToAnonymousObjectTransformationInfo =
+            new HashMap<String, AnonymousObjectTransformationInfo>();
 
     public InliningContext(
             @Nullable InliningContext parent,
@@ -116,5 +118,14 @@ public class InliningContext {
     public InlineCallSiteInfo getCallSiteInfo() {
         assert parent != null : "At least root context should return proper value";
         return parent.getCallSiteInfo();
+    }
+
+    @Nullable
+    public AnonymousObjectTransformationInfo findAnonymousObjectTransformationInfo(@NotNull String internalName) {
+        if (getRoot().internalNameToAnonymousObjectTransformationInfo.containsKey(internalName)) {
+            return getRoot().internalNameToAnonymousObjectTransformationInfo.get(internalName);
+        }
+
+        return null;
     }
 }

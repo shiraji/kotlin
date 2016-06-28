@@ -40,6 +40,8 @@ import org.jetbrains.kotlin.utils.DFS
 import org.jetbrains.org.objectweb.asm.Label
 import org.jetbrains.org.objectweb.asm.Type
 import org.jetbrains.org.objectweb.asm.commons.InstructionAdapter
+import org.jetbrains.org.objectweb.asm.tree.InsnList
+import org.jetbrains.org.objectweb.asm.tree.MethodNode
 import java.util.*
 
 fun generateIsCheck(
@@ -182,4 +184,12 @@ fun sortTopLevelClassesAndPrepareContextForSealedClasses(
     }
     sortedDescriptors.mapTo(result) { descriptorToPsi[it]!! }
     return result
+}
+
+fun withInstructionAdapter(block: InstructionAdapter.() -> Unit): InsnList {
+    val tmpMethodNode = MethodNode()
+
+    InstructionAdapter(tmpMethodNode).apply(block)
+
+    return tmpMethodNode.instructions
 }

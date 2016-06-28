@@ -1123,7 +1123,7 @@ fun main(args: Array<String>) {
         }
 
         testClass<AbstractJsModuleTest>() {
-            model("jsModule/cases")
+            model("jsModule/cases", extension = null, recursive = false)
         }
     }
 

@@ -14456,6 +14456,7 @@ public final class ProtoBuf {
      *Modality
      *isNotDefault
      *isExternal
+     *isInline
      * </pre>
      */
     boolean hasGetterFlags();
@@ -14469,6 +14470,7 @@ public final class ProtoBuf {
      *Modality
      *isNotDefault
      *isExternal
+     *isInline
      * </pre>
      */
     int getGetterFlags();
@@ -14843,6 +14845,7 @@ public final class ProtoBuf {
      *Modality
      *isNotDefault
      *isExternal
+     *isInline
      * </pre>
      */
     public boolean hasGetterFlags() {
@@ -14858,6 +14861,7 @@ public final class ProtoBuf {
      *Modality
      *isNotDefault
      *isExternal
+     *isInline
      * </pre>
      */
     public int getGetterFlags() {
@@ -15853,6 +15857,7 @@ public final class ProtoBuf {
        *Modality
        *isNotDefault
        *isExternal
+       *isInline
        * </pre>
        */
       public boolean hasGetterFlags() {
@@ -15868,6 +15873,7 @@ public final class ProtoBuf {
        *Modality
        *isNotDefault
        *isExternal
+       *isInline
        * </pre>
        */
       public int getGetterFlags() {
@@ -15883,6 +15889,7 @@ public final class ProtoBuf {
        *Modality
        *isNotDefault
        *isExternal
+       *isInline
        * </pre>
        */
       public Builder setGetterFlags(int value) {
@@ -15901,6 +15908,7 @@ public final class ProtoBuf {
        *Modality
        *isNotDefault
        *isExternal
+       *isInline
        * </pre>
        */
       public Builder clearGetterFlags() {

@@ -16,10 +16,28 @@
 
 package org.jetbrains.kotlin.js.test.semantics
 
+import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.js.config.EcmaVersion
+import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.test.*
+import org.jetbrains.kotlin.serialization.js.ModuleKind
 
 abstract class AbstractBlackBoxTest(d: String) : SingleFileTranslationTest(d) {
     override fun doTest(filename: String) = checkBlackBoxIsOkByPath(filename)
+}
+
+abstract class AbstractJsModuleTest : SingleFileTranslationTest("jsModule/") {
+    override fun setupConfig(configuration: CompilerConfiguration) {
+        super.setupConfig(configuration)
+        configuration.put(JSConfigurationKeys.MODULE_KIND, ModuleKind.AMD)
+    }
+
+    override fun additionalJsFiles(ecmaVersion: EcmaVersion): MutableList<String> {
+        return mutableListOf(
+                BasicTest.MODULE_EMULATION_FILE,
+                "${pathToTestDir()}/native/${getTestName(true)}.js"
+        )
+    }
 }
 
 abstract class AbstractBridgeTest : AbstractBlackBoxTest("bridges/")
@@ -60,6 +78,6 @@ abstract class AbstractLocalClassesTest : AbstractBlackBoxTest("localClasses/")
 
 abstract class AbstractNonLocalReturnsTest : KotlinJSMultiFileTest("inline.generated/nonLocalReturns/")
 
-public abstract class AbstractRttiTest : SingleFileTranslationTest("rtti/")
+abstract class AbstractRttiTest : SingleFileTranslationTest("rtti/")
 
-public abstract class AbstractCastTest : SingleFileTranslationTest("expression/cast/")
+abstract class AbstractCastTest : SingleFileTranslationTest("expression/cast/")

@@ -22,6 +22,9 @@ package kotlin.collections
 import java.io.Serializable
 import java.util.*
 import kotlin.comparisons.compareValues
+import kotlin.IllegalArgumentException
+import kotlin.UnsupportedOperationException
+import kotlin.IndexOutOfBoundsException
 
 typealias RandomAccess = java.util.RandomAccess
 typealias Comparator<T> = java.util.Comparator<T> // kotlin.comparisons?

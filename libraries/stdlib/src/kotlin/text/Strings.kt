@@ -19,7 +19,9 @@
 
 
 package kotlin.text
-
+import kotlin.IllegalArgumentException
+import kotlin.UnsupportedOperationException
+import kotlin.IndexOutOfBoundsException
 
 /**
  * Returns a sub sequence of this char sequence having leading and trailing characters matching the [predicate] trimmed.

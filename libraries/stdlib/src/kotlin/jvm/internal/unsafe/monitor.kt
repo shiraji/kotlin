@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 JetBrains s.r.o.
+ * Copyright 2010-2016 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,10 @@
  */
 
 package kotlin.jvm.internal.unsafe
+import kotlin.IllegalArgumentException
+import kotlin.UnsupportedOperationException
+import kotlin.IndexOutOfBoundsException
+import kotlin.IllegalStateException
 
 private fun monitorEnter(@Suppress("UNUSED_PARAMETER") monitor: Any): Unit = throw UnsupportedOperationException("This function can only be used privately")
 

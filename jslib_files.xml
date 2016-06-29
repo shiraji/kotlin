@@ -20,6 +20,7 @@
             <include name="kotlin/reflect/**/*.kt"/>
             <include name="kotlin/annotation/Annotations.kt"/>
             <include name="kotlin/Unit.kt"/>
+            <exclude name="kotlin/Exceptions.kt"/>
         </fileset>
 
         <fileset dir="${basedir}/libraries/kotlin.test/shared">

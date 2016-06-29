@@ -61,4 +61,19 @@ private val DEFAULT_IMPORTS_FOR_JVM: List<ImportPath> = ArrayList<ImportPath>().
     for (builtinPackageFragment in builtIns.builtInsPackageFragments) {
         addAllClassifiersFromScope(builtinPackageFragment.getMemberScope())
     }
+    for (exceptionName in listOf(
+        "Error",
+        "Exception",
+        "RuntimeException",
+        "IllegalArgumentException",
+        "IllegalStateException",
+        "IndexOutOfBoundsException",
+        "UnsupportedOperationException",
+        "NumberFormatException",
+        "NullPointerException",
+        "ClassCastException",
+        "AssertionError",
+        "NoSuchElementException")) {
+        add(ImportPath("kotlin.$exceptionName"))
+    }
 }

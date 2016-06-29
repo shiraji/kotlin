@@ -16,7 +16,6 @@
 
 package kotlin.jvm.internal
 
-import kotlin.UnsupportedOperationException
 import kotlin.reflect.KDeclarationContainer
 
 private fun notSupportedError(): Nothing {

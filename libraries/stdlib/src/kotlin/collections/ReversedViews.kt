@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2016 JetBrains s.r.o.
+ * Copyright 2010-2015 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,6 @@
 package kotlin.collections
 
 import java.util.AbstractList
-import kotlin.IllegalArgumentException
-import kotlin.UnsupportedOperationException
-import kotlin.IndexOutOfBoundsException
 
 private open class ReversedListReadOnly<T>(protected open val delegate: List<T>) : AbstractList<T>() {
     override val size: Int get() = delegate.size

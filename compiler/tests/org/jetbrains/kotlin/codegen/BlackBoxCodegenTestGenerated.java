@@ -11271,6 +11271,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
                 doTest(fileName);
             }
 
+            @TestMetadata("jvmStaticInCompanionObject.kt")
+            public void testJvmStaticInCompanionObject() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/reflection/callBy/jvmStaticInCompanionObject.kt");
+                doTest(fileName);
+            }
+
             @TestMetadata("jvmStaticInObject.kt")
             public void testJvmStaticInObject() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/reflection/callBy/jvmStaticInObject.kt");

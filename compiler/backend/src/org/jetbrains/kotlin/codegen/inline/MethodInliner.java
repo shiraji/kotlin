@@ -260,8 +260,11 @@ public class MethodInliner {
                     assert transformationInfo instanceof AnonymousObjectTransformationInfo :
                             "<init> call doesn't correspond to object transformation info: " +
                             owner + "." + name + ", info " + transformationInfo;
+                    InliningContext parent = inliningContext.getParent();
                     if (transformationInfo.shouldRegenerate(isSameModule) ||
-                            inlineCallSiteInfo.getOwnerClassName().equals(transformationInfo.getOldClassName())) {
+                        (parent != null &&
+                         parent.isContinuation() &&
+                         inlineCallSiteInfo.getOwnerClassName().equals(transformationInfo.getOldClassName()))) {
                         //put additional captured parameters on stack
                         AnonymousObjectTransformationInfo info = (AnonymousObjectTransformationInfo) transformationInfo;
 

@@ -38,6 +38,8 @@ public class InliningContext {
     public final Map<String, AnonymousObjectTransformationInfo> internalNameToAnonymousObjectTransformationInfo =
             new HashMap<String, AnonymousObjectTransformationInfo>();
 
+    private boolean isContinuation;
+
     public InliningContext(
             @Nullable InliningContext parent,
             @NotNull Map<Integer, LambdaInfo> expressionMap,
@@ -127,5 +129,13 @@ public class InliningContext {
         }
 
         return null;
+    }
+
+    public boolean isContinuation() {
+        return isContinuation;
+    }
+
+    public void setContinuation(boolean continuation) {
+        isContinuation = continuation;
     }
 }

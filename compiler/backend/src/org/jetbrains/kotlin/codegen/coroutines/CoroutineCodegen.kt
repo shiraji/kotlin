@@ -171,7 +171,8 @@ class CoroutineCodegen(
             val constructor = Method("<init>", Type.VOID_TYPE, constructorParameters.map { it.fieldType }.toTypedArray())
             invokespecial(owner.internalName, constructor.name, constructor.descriptor, false)
 
-            dup()
+            //REDUNDANT?
+            //dup()
 
             for ((index, parameter) in signature.valueParameters.withIndex()) {
                 load(index + 1, parameter.asmType)

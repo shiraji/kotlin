@@ -22,7 +22,7 @@ fun box(): String {
     var result = ""
     run {
         builder {
-            result += ""
+            result += "OK"
         }
     }
 

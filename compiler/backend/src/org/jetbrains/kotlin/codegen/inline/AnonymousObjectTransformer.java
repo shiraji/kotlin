@@ -17,11 +17,12 @@
 package org.jetbrains.kotlin.codegen.inline;
 
 import com.intellij.util.ArrayUtil;
-import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
-import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.kotlin.codegen.*;
+import org.jetbrains.kotlin.codegen.AsmUtil;
+import org.jetbrains.kotlin.codegen.ClassBuilder;
+import org.jetbrains.kotlin.codegen.FieldInfo;
+import org.jetbrains.kotlin.codegen.StackValue;
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin;
 import org.jetbrains.org.objectweb.asm.*;
 import org.jetbrains.org.objectweb.asm.commons.InstructionAdapter;
@@ -66,6 +67,14 @@ public class AnonymousObjectTransformer extends ObjectTransformer<AnonymousObjec
             public void visit(int version, int access, @NotNull String name, String signature, String superName, String[] interfaces) {
                 InlineCodegenUtil.assertVersionNotGreaterThanGeneratedOne(version, name, inliningContext.state);
                 classBuilder.defineClass(null, version, access, name, signature, superName, interfaces);
+                if (interfaces != null) {
+                    for (String anInterface : interfaces) {
+                        if("kotlin/coroutines/Continuation".equals(anInterface)) {
+                            inliningContext.setContinuation(true);
+                            break;
+                        }
+                    }
+                }
             }
 
             @Override
@@ -141,7 +150,6 @@ public class AnonymousObjectTransformer extends ObjectTransformer<AnonymousObjec
         generateConstructorAndFields(classBuilder, allCapturedParamBuilder, constructorParamBuilder, parentRemapper, additionalFakeParams);
 
         for (MethodNode next : methodsToTransform) {
-            adjustConstructorCallsToDescriptorChange(next, constructorParamBuilder);
             MethodVisitor deferringVisitor = newMethod(classBuilder, next);
             InlineResult funResult =
                     inlineMethodAndUpdateGlobalResult(parentRemapper, deferringVisitor, next, allCapturedParamBuilder, false);
@@ -173,33 +181,6 @@ public class AnonymousObjectTransformer extends ObjectTransformer<AnonymousObjec
         classBuilder.done();
 
         return transformationResult;
-    }
-
-    private void adjustConstructorCallsToDescriptorChange(
-            @NotNull MethodNode methodNode,
-            @NotNull ParametersBuilder constructorParamBuilder
-    ) {
-        for (AbstractInsnNode insn : methodNode.instructions.toArray()) {
-            if (insn instanceof MethodInsnNode &&
-                ((MethodInsnNode) insn).owner.equals(oldObjectType.getInternalName()) &&
-                    ((MethodInsnNode) insn).name.equals("<init>")) {
-
-                for (final CapturedParamInfo info : constructorParamBuilder.listCaptured()) {
-                    if (info.isSkipped) continue;
-                    methodNode.instructions.insertBefore(insn, CodegenUtilKt.withInstructionAdapter(
-                            new Function1<InstructionAdapter, Unit>() {
-                                @Override
-                                public Unit invoke(InstructionAdapter adapter) {
-                                    assert info.getRemapValue() != null : "New constructor parameter should have remap values";
-                                    info.getRemapValue().put(info.getType(), adapter);
-                                    return Unit.INSTANCE;
-                                }
-                            }));
-                }
-
-                ((MethodInsnNode) insn).desc = transformationInfo.newConstructorDescriptor;
-            }
-        }
     }
 
     private void writeOuterInfo(@NotNull ClassVisitor visitor) {

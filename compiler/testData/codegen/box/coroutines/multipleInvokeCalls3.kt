@@ -78,50 +78,52 @@ fun box(): String {
     var x = "O"
     var y = "K"
 
-    // inlined
-    run {
-        // no suspension
-        builder2 { a, b ->
-            if (a != "Q" || b != 1234567890123456789L) return@builder2
-            result = x + y
-        }
+    {
+        // inlined
+        run {
+            // no suspension
+            builder2 { a, b ->
+                if (a != "Q" || b != 1234567890123456789L) return@builder2
+                result = x + y
+            }
 
-        // 1 suspension
-        builder2 { a, b ->
-            if (a != "Q" || b != 1234567890123456789L) return@builder2
-            if (suspendHere() != "56") return@builder2
-            result = x + y
-        }
+            // 1 suspension
+            builder2 { a, b ->
+                if (a != "Q" || b != 1234567890123456789L) return@builder2
+                if (suspendHere() != "56") return@builder2
+                result = x + y
+            }
 
-        // 2 suspensions
-        builder2 { a, b ->
-            if (a != "Q" || b != 1234567890123456789L) return@builder2
-            if (suspendHere() != "56") return@builder2
-            suspendHere()
-            result = x + y
-        }
+            // 2 suspensions
+            builder2 { a, b ->
+                if (a != "Q" || b != 1234567890123456789L) return@builder2
+                if (suspendHere() != "56") return@builder2
+                suspendHere()
+                result = x + y
+            }
 
-        // no suspension
-        builder2 { a, b ->
-            if (a != "Q" || b != 1234567890123456789L) return@builder2
-            result = x + y
-        }
+            // no suspension
+            builder2 { a, b ->
+                if (a != "Q" || b != 1234567890123456789L) return@builder2
+                result = x + y
+            }
 
-        // 1 suspension
-        builder2 { a, b ->
-            if (a != "Q" || b != 1234567890123456789L) return@builder2
-            if (suspendHere() != "56") return@builder2
-            result = x + y
-        }
+            // 1 suspension
+            builder2 { a, b ->
+                if (a != "Q" || b != 1234567890123456789L) return@builder2
+                if (suspendHere() != "56") return@builder2
+                result = x + y
+            }
 
-        // 2 suspensions
-        builder2 { a, b ->
-            if (a != "Q" || b != 1234567890123456789L) return@builder2
-            if (suspendHere() != "56") return@builder2
-            suspendHere()
-            result = x + y
+            // 2 suspensions
+            builder2 { a, b ->
+                if (a != "Q" || b != 1234567890123456789L) return@builder2
+                if (suspendHere() != "56") return@builder2
+                suspendHere()
+                result = x + y
+            }
         }
-    }
+    } ()
 
     return "OK"
 }

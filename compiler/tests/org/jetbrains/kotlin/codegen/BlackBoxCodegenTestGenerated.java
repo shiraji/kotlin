@@ -4231,6 +4231,18 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             doTest(fileName);
         }
 
+        @TestMetadata("multipleInvokeCalls2.kt")
+        public void testMultipleInvokeCalls2() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/coroutines/multipleInvokeCalls2.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("multipleInvokeCalls3.kt")
+        public void testMultipleInvokeCalls3() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/coroutines/multipleInvokeCalls3.kt");
+            doTest(fileName);
+        }
+
         @TestMetadata("nestedTryCatch.kt")
         public void testNestedTryCatch() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/coroutines/nestedTryCatch.kt");

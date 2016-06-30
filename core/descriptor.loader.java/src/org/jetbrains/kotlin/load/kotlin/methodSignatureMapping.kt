@@ -55,20 +55,36 @@ fun mapValueParameterType(f: FunctionDescriptor, valueParameterDescriptor: Value
     else
         valueParameterDescriptor.type.mapToJvmType()
 
-// Boxing is only necessary for 'remove(E): Boolean' of a MutableList<Int> implementation
+// Boxing is necessary for 'remove(E): Boolean' of a MutableList<Int> implementation
 // Otherwise this method will clash with 'remove(I): E' also defined in the JDK interface (mapped to kotlin 'removeAt')
+// Also first parameter from 'Int.compareTo' must also be boxed (as well as it's analogue from java.lang.Integer)
 fun forceSingleValueParameterBoxing(f: FunctionDescriptor): Boolean {
-    if (f.isFromJavaOrBuiltins() || f.valueParameters.size != 1) return false
+    if (f.valueParameters.size != 1) return false
 
-    if (f.name.asString() != "remove" ||
-        (f.original.valueParameters.single().type.mapToJvmType() as? JvmType.Primitive)?.jvmPrimitiveType != JvmPrimitiveType.INT) return false
+    when (f.name.asString()) {
+        "remove" -> {
+            if (f.isFromJavaOrBuiltins()) return false
+            if ((f.original.valueParameters.single().type.mapToJvmType() as? JvmType.Primitive)?.jvmPrimitiveType != JvmPrimitiveType.INT) return false
 
-    val overridden =
-            BuiltinMethodsWithSpecialGenericSignature.getOverriddenBuiltinFunctionWithErasedValueParametersInJava(f)
-            ?: return false
+            val overridden =
+                    BuiltinMethodsWithSpecialGenericSignature.getOverriddenBuiltinFunctionWithErasedValueParametersInJava(f)
+                    ?: return false
 
-    return overridden.containingDeclaration.fqNameUnsafe == KotlinBuiltIns.FQ_NAMES.mutableCollection.toUnsafe()
-                && overridden.original.valueParameters.single().type.mapToJvmType() is JvmType.Object
+            return overridden.containingDeclaration.fqNameUnsafe == KotlinBuiltIns.FQ_NAMES.mutableCollection.toUnsafe()
+                        && overridden.original.valueParameters.single().type.mapToJvmType() is JvmType.Object
+        }
+
+        "compareTo" -> {
+            val classDescriptor =
+                    f.containingDeclaration as? ClassDescriptor ?: return false
+            val parameterClass =
+                    f.valueParameters.single().type.constructor.declarationDescriptor as? ClassDescriptor
+                    ?: return false
+            return KotlinBuiltIns.isPrimitiveClass(classDescriptor) && classDescriptor.fqNameSafe == parameterClass.fqNameSafe
+        }
+
+        else -> return false
+    }
 }
 
 // This method only returns not-null for class methods

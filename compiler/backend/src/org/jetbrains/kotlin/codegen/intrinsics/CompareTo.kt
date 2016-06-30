@@ -16,9 +16,11 @@
 
 package org.jetbrains.kotlin.codegen.intrinsics
 
+import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.AsmUtil.comparisonOperandType
 import org.jetbrains.kotlin.codegen.Callable
 import org.jetbrains.kotlin.codegen.CallableMethod
+import org.jetbrains.org.objectweb.asm.Opcodes
 import org.jetbrains.org.objectweb.asm.Type
 import org.jetbrains.org.objectweb.asm.commons.InstructionAdapter
 
@@ -34,9 +36,13 @@ class CompareTo : IntrinsicMethod() {
     }
 
     override fun toCallable(method: CallableMethod): Callable {
+        val valueParameterType = method.parameterTypes.single()
         val parameterType = comparisonOperandType(
                 method.dispatchReceiverType ?: method.extensionReceiverType,
-                method.parameterTypes.single()
+                if (valueParameterType.sort == Type.OBJECT)
+                    AsmUtil.unboxType(valueParameterType)
+                else
+                    valueParameterType
         )
         return createBinaryIntrinsicCallable(method.returnType, parameterType, parameterType, null) {
             genInvoke(parameterType, it)

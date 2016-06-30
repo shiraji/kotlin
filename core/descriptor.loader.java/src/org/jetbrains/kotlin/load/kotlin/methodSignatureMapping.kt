@@ -58,12 +58,17 @@ fun mapValueParameterType(f: FunctionDescriptor, valueParameterDescriptor: Value
 // Boxing is only necessary for 'remove(E): Boolean' of a MutableList<Int> implementation
 // Otherwise this method will clash with 'remove(I): E' also defined in the JDK interface (mapped to kotlin 'removeAt')
 fun forceSingleValueParameterBoxing(f: FunctionDescriptor): Boolean {
-    if (f.isFromJavaOrBuiltins()) return false
+    if (f.isFromJavaOrBuiltins() || f.valueParameters.size != 1) return false
 
     if (f.name.asString() != "remove" ||
         (f.original.valueParameters.single().type.mapToJvmType() as? JvmType.Primitive)?.jvmPrimitiveType != JvmPrimitiveType.INT) return false
 
-    return BuiltinMethodsWithSpecialGenericSignature.getOverriddenBuiltinFunctionWithErasedValueParametersInJava(f) != null
+    val overridden =
+            BuiltinMethodsWithSpecialGenericSignature.getOverriddenBuiltinFunctionWithErasedValueParametersInJava(f)
+            ?: return false
+
+    return overridden.containingDeclaration.fqNameUnsafe == KotlinBuiltIns.FQ_NAMES.mutableCollection.toUnsafe()
+                && overridden.original.valueParameters.single().type.mapToJvmType() is JvmType.Object
 }
 
 // This method only returns not-null for class methods

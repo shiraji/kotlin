@@ -75,6 +75,7 @@ public class WordSelectionTest extends KotlinLightCodeInsightFixtureTestCase {
     public void testMultiDeclaration() { doTest(); }
 
     public void testDefiningVariable() { doTest(); }
+    public void testDefiningClass() { doTest(); }
 
     private void doTest() {
         String dirName = getTestName(false);

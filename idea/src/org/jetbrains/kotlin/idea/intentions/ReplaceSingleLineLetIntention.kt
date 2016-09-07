@@ -18,7 +18,6 @@ package org.jetbrains.kotlin.idea.intentions
 
 import com.intellij.openapi.editor.Editor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
-import org.jetbrains.kotlin.idea.core.replaced
 import org.jetbrains.kotlin.idea.inspections.IntentionBasedInspection
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
@@ -38,7 +37,26 @@ class ReplaceSingleLineLetIntention : SelfTargetingOffsetIndependentIntention<Kt
         val parameterName = getParameterNameFromLambdaExpression(lambdaExpression)
         val expressionText = dotQualifiedExpression.text.replace("$parameterName.", "")
         val newExpression = KtPsiFactory(element.project).createExpression(expressionText)
-        element.replaced(newExpression)
+
+        val parent = element.parent
+
+        dotQualifiedExpression.firstChild.delete()
+
+        parent.addBefore(newExpression, element)
+
+//        parent.add(dotQualifiedExpression)
+        element.delete()
+
+//        dotQualifiedExpression.firstChild.delete()
+
+//        val newExpression = KtPsiFactory(element.project).createExpression(expressionText)
+//        element.replaced(dotQualifiedExpression)
+//        element.delete()
+//        element.parent.children.takeWhile {
+//            it == element
+//        }.map {
+//            element.parent.add(it)
+//        }
     }
 
     override fun isApplicableTo(element: KtCallExpression): Boolean {

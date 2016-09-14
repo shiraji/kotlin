@@ -16,5 +16,31 @@
 
 package org.jetbrains.kotlin.idea.intentions
 
-class ConvertToUnitBlockBodyIntention {
+import com.intellij.openapi.editor.Editor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.core.replaced
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.typeUtil.isUnit
+
+class ConvertToUnitBlockBodyIntention : SelfTargetingIntention<KtNamedFunction>(
+        KtNamedFunction::class.java, "Convert to empty block body") {
+    override fun isApplicableTo(element: KtNamedFunction, caretOffset: Int): Boolean {
+        if (element.hasBlockBody() || !element.hasBody() || element.hasDeclaredReturnType()) return false
+        return element.returnType()?.isUnit() ?: false
+    }
+
+    private fun KtNamedFunction.returnType(): KotlinType? {
+        val descriptor = analyze(BodyResolveMode.PARTIAL)[BindingContext.DECLARATION_TO_DESCRIPTOR, this] ?: return null
+        return (descriptor as FunctionDescriptor).returnType
+    }
+
+    override fun applyTo(element: KtNamedFunction, editor: Editor?) {
+        element.equalsToken!!.delete()
+        element.bodyExpression!!.replaced(KtPsiFactory(element).createEmptyBody())
+    }
 }

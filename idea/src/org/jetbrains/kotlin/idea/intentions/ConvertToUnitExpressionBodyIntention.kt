@@ -19,7 +19,9 @@ package org.jetbrains.kotlin.idea.intentions
 import com.intellij.openapi.editor.Editor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.core.replaced
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.kotlin.types.KotlinType
@@ -28,6 +30,9 @@ import org.jetbrains.kotlin.types.typeUtil.isUnit
 class ConvertToUnitExpressionBodyIntention : SelfTargetingOffsetIndependentIntention<KtNamedFunction>(
         KtNamedFunction::class.java, "Convert to expression body") {
     override fun applyTo(element: KtNamedFunction, editor: Editor?) {
+        val body = element.bodyExpression ?: return
+        element.addBefore(KtPsiFactory(element).createEQ(), body)
+        body.replaced(KtPsiFactory(element).createExpression("Unit"))
     }
 
     override fun isApplicableTo(element: KtNamedFunction): Boolean {

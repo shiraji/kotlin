@@ -1,4 +1,4 @@
-// "Remove redundant 'if' statement" "true"
+// "Remove redundant 'if-return' statement" "true"
 fun bar(p: Int) {
     val v1 = <caret>if (p > 0) true else false
 }

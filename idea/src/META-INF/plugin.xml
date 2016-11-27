@@ -1774,8 +1774,8 @@
                      language="kotlin"
     />
 
-    <localInspection implementationClass="org.jetbrains.kotlin.idea.inspections.RedundantIfInspection"
-                     displayName="Redundant 'if' statement"
+    <localInspection implementationClass="org.jetbrains.kotlin.idea.inspections.RedundantIfReturnInspection"
+                     displayName="Redundant 'if-return' statement"
                      groupName="Kotlin"
                      enabledByDefault="true"
                      cleanupTool="true"

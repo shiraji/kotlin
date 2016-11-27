@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.idea.intentions.negate
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 
-class RedundantIfInspection : AbstractKotlinInspection(), CleanupLocalInspectionTool {
+class RedundantIfReturnInspection : AbstractKotlinInspection(), CleanupLocalInspectionTool {
 
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
         return object : KtVisitorVoid() {
@@ -34,9 +34,9 @@ class RedundantIfInspection : AbstractKotlinInspection(), CleanupLocalInspection
                 if (redundancyType == RedundancyType.NONE) return
 
                 holder.registerProblem(expression,
-                                       "Redundant 'if' statement",
+                                       "Redundant 'if-return' statement",
                                        ProblemHighlightType.WEAK_WARNING,
-                                       RemoveRedundantIf(redundancyType, branchType))
+                                       RemoveRedundantIfReturn(redundancyType, branchType))
             }
         }
     }
@@ -86,8 +86,8 @@ class RedundantIfInspection : AbstractKotlinInspection(), CleanupLocalInspection
         }
     }
 
-    private class RemoveRedundantIf(private val redundancyType: RedundancyType, private val branchType: BranchType) : LocalQuickFix {
-        override fun getName() = "Remove redundant 'if' statement"
+    private class RemoveRedundantIfReturn(private val redundancyType: RedundancyType, private val branchType: BranchType) : LocalQuickFix {
+        override fun getName() = "Remove redundant 'if-return' statement"
         override fun getFamilyName() = name
 
         override fun applyFix(project: Project, descriptor: ProblemDescriptor) {

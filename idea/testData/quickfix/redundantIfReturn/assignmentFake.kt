@@ -1,4 +1,4 @@
-// "Remove redundant 'if' statement" "false"
+// "Remove redundant 'if-return' statement" "false"
 // ACTION: Add braces to 'if' statement
 // ACTION: Invert 'if' condition
 // ACTION: Replace 'if' with 'when'

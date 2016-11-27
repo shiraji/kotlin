@@ -1,0 +1,2 @@
+// "Remove redundant 'if-return' statement" "true"
+fun bar(value: Int) = value % 2 == 0

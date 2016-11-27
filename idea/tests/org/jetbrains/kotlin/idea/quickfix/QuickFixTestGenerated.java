@@ -7165,53 +7165,53 @@ public class QuickFixTestGenerated extends AbstractQuickFixTest {
         }
     }
 
-    @TestMetadata("idea/testData/quickfix/redundantIf")
+    @TestMetadata("idea/testData/quickfix/redundantIfReturn")
     @TestDataPath("$PROJECT_ROOT")
     @RunWith(JUnit3RunnerWithInners.class)
-    public static class RedundantIf extends AbstractQuickFixTest {
-        public void testAllFilesPresentInRedundantIf() throws Exception {
-            KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/quickfix/redundantIf"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), TargetBackend.ANY, true);
+    public static class RedundantIfReturn extends AbstractQuickFixTest {
+        public void testAllFilesPresentInRedundantIfReturn() throws Exception {
+            KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/quickfix/redundantIfReturn"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), TargetBackend.ANY, true);
         }
 
         @TestMetadata("assignExpression.kt")
         public void testAssignExpression() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIf/assignExpression.kt");
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIfReturn/assignExpression.kt");
             doTest(fileName);
         }
 
         @TestMetadata("assignment.kt")
         public void testAssignment() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIf/assignment.kt");
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIfReturn/assignment.kt");
             doTest(fileName);
         }
 
         @TestMetadata("assignmentFake.kt")
         public void testAssignmentFake() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIf/assignmentFake.kt");
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIfReturn/assignmentFake.kt");
             doTest(fileName);
         }
 
         @TestMetadata("expression.kt")
         public void testExpression() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIf/expression.kt");
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIfReturn/expression.kt");
             doTest(fileName);
         }
 
         @TestMetadata("expressionBody.kt")
         public void testExpressionBody() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIf/expressionBody.kt");
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIfReturn/expressionBody.kt");
             doTest(fileName);
         }
 
         @TestMetadata("negate.kt")
         public void testNegate() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIf/negate.kt");
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIfReturn/negate.kt");
             doTest(fileName);
         }
 
         @TestMetadata("simple.kt")
         public void testSimple() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIf/simple.kt");
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/quickfix/redundantIfReturn/simple.kt");
             doTest(fileName);
         }
     }

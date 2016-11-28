@@ -17,12 +17,21 @@
 package org.jetbrains.kotlin.idea.intentions
 
 import com.intellij.openapi.editor.Editor
+import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.psi.KtConstantExpression
+import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
+import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 
 class ConvertIntegerToHexIntention : SelfTargetingOffsetIndependentIntention<KtConstantExpression>(KtConstantExpression::class.java, "Convert to") {
     override fun applyTo(element: KtConstantExpression, editor: Editor?) {
     }
 
     override fun isApplicableTo(element: KtConstantExpression): Boolean {
+        val elementType = element.getType(element.analyze()) ?: return false
+        val resolvedCall = element.getResolvedCall(element.analyze())
+
+
+
+        return false
     }
 }

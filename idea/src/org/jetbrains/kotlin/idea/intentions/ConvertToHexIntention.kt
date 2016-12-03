@@ -35,8 +35,6 @@ class ConvertToHexIntention : SelfTargetingOffsetIndependentIntention<KtConstant
         val newExpression = when {
             KotlinBuiltIns.isInt(elementType) -> factory.createExpressionByPattern("0x$0", java.lang.Integer.toHexString(targetExpression.text.toInt()))
             KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("0x$0L", java.lang.Long.toHexString(targetExpression.text.toLong()))
-            KotlinBuiltIns.isFloat(elementType) -> factory.createExpressionByPattern("$0f", java.lang.Float.toHexString(targetExpression.text.toFloat()))
-            KotlinBuiltIns.isDouble(elementType) -> factory.createExpression(java.lang.Double.toHexString(targetExpression.text.toDouble()))
             else -> return
         }
         targetExpression.replaced(newExpression)
@@ -45,6 +43,5 @@ class ConvertToHexIntention : SelfTargetingOffsetIndependentIntention<KtConstant
     override fun isApplicableTo(element: KtConstantExpression): Boolean {
         val elementType = element.getType(element.analyze()) ?: return false
         return KotlinBuiltIns.isInt(elementType) || KotlinBuiltIns.isLong(elementType)
-               || KotlinBuiltIns.isFloat(elementType) || KotlinBuiltIns.isDouble(elementType)
     }
 }

@@ -22,12 +22,8 @@ import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
-import org.jetbrains.kotlin.idea.caches.resolve.analyzeAndGetResult
 import org.jetbrains.kotlin.idea.core.setType
-import org.jetbrains.kotlin.idea.core.ShortenReferences
 import org.jetbrains.kotlin.idea.references.mainReference
-import org.jetbrains.kotlin.js.descriptorUtils.nameIfStandardType
-import org.jetbrains.kotlin.idea.util.IdeDescriptorRenderers
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -265,5 +261,42 @@ fun KtDotQualifiedExpression.replaceFirstReceiver(
         }
     }
     return this
+}
+
+fun String.hasBinaryPrefix() = startsWith("0b") || startsWith("0B")
+
+fun String.hasHexPrefix() = startsWith("0x") || startsWith("0X")
+
+fun String.hasLongSuffix() = endsWith('l') || endsWith('L')
+
+fun String.parseLong(): Long? {
+    try {
+        fun substringLongSuffix(s: String) = if (s.hasLongSuffix()) s.substring(0, s.length - 1) else s
+        fun parseLong(text: String, radix: Int) = java.lang.Long.parseLong(substringLongSuffix(text), radix)
+
+        return when {
+            hasHexPrefix() -> parseLong(substring(2), 16)
+            hasBinaryPrefix() -> parseLong(substring(2), 2)
+            else -> parseLong(this, 10)
+        }
+    }
+    catch (e: NumberFormatException) {
+        return null
+    }
+}
+
+fun String.parseInt(): Int? {
+    try {
+        fun parseInt(text: String, radix: Int) = java.lang.Integer.parseInt(text, radix)
+
+        return when {
+            hasHexPrefix() -> parseInt(substring(2), 16)
+            hasBinaryPrefix() -> parseInt(substring(2), 2)
+            else -> parseInt(this, 10)
+        }
+    }
+    catch (e: NumberFormatException) {
+        return null
+    }
 }
 

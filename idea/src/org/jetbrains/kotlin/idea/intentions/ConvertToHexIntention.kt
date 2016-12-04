@@ -33,14 +33,15 @@ class ConvertToHexIntention : SelfTargetingOffsetIndependentIntention<KtConstant
         val targetExpression = element.getStrictParentOfType<KtPrefixExpression>() ?: element
         val factory = KtPsiFactory(element)
         val newExpression = when {
-            KotlinBuiltIns.isInt(elementType) -> factory.createExpressionByPattern("0x$0", java.lang.Integer.toHexString(targetExpression.text.toInt()))
-            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("0x$0L", java.lang.Long.toHexString(targetExpression.text.toLong()))
+            KotlinBuiltIns.isInt(elementType) -> factory.createExpressionByPattern("0x$0", targetExpression.text.parseInt() ?: return)
+            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("0x$0L", targetExpression.text.parseLong() ?: return)
             else -> return
         }
         targetExpression.replaced(newExpression)
     }
 
     override fun isApplicableTo(element: KtConstantExpression): Boolean {
+        if (element.text.hasHexPrefix()) return false
         val elementType = element.getType(element.analyze()) ?: return false
         return KotlinBuiltIns.isInt(elementType) || KotlinBuiltIns.isLong(elementType)
     }

@@ -16,30 +16,22 @@
 
 package org.jetbrains.kotlin.idea.intentions
 
-import com.intellij.openapi.editor.Editor
-import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.idea.caches.resolve.analyze
-import org.jetbrains.kotlin.idea.core.replaced
 import org.jetbrains.kotlin.psi.KtConstantExpression
+import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.createExpressionByPattern
-import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 
-class ConvertToBinaryIntention : SelfTargetingOffsetIndependentIntention<KtConstantExpression>(KtConstantExpression::class.java, "Convert to binary") {
-    override fun applyTo(element: KtConstantExpression, editor: Editor?) {
-        val elementType = element.getType(element.analyze()) ?: return
-        val factory = KtPsiFactory(element)
-        val newExpression = when {
-            KotlinBuiltIns.isInt(elementType) -> factory.createExpressionByPattern("0b$0", java.lang.Integer.toBinaryString(element.text.parseInt() ?: return))
-            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("0b$0L", java.lang.Long.toBinaryString(element.text.parseLong() ?: return))
-            else -> return
-        }
-        element.replaced(newExpression)
+class ConvertToBinaryIntention : ConvertNumeralSystemIntention("Convert to binary") {
+    override fun createIntegerExpression(element: KtConstantExpression): KtExpression? {
+        return KtPsiFactory(element).createExpressionByPattern("0b$0", java.lang.Integer.toBinaryString(element.text.parseInt() ?: return null))
+    }
+
+    override fun createLongExpression(element: KtConstantExpression): KtExpression? {
+        return KtPsiFactory(element).createExpressionByPattern("0b$0L", java.lang.Long.toBinaryString(element.text.parseLong() ?: return null))
     }
 
     override fun isApplicableTo(element: KtConstantExpression): Boolean {
         if (element.text.hasBinaryPrefix()) return false
-        val elementType = element.getType(element.analyze()) ?: return false
-        return KotlinBuiltIns.isInt(elementType) || KotlinBuiltIns.isLong(elementType)
+        return super.isApplicableTo(element)
     }
 }

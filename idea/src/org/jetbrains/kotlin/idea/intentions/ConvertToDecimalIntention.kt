@@ -16,30 +16,22 @@
 
 package org.jetbrains.kotlin.idea.intentions
 
-import com.intellij.openapi.editor.Editor
-import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.idea.caches.resolve.analyze
-import org.jetbrains.kotlin.idea.core.replaced
 import org.jetbrains.kotlin.psi.KtConstantExpression
+import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.createExpressionByPattern
-import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 
-class ConvertToDecimalIntention : SelfTargetingOffsetIndependentIntention<KtConstantExpression>(KtConstantExpression::class.java, "Convert to decimal") {
-    override fun applyTo(element: KtConstantExpression, editor: Editor?) {
-        val elementType = element.getType(element.analyze()) ?: return
-        val factory = KtPsiFactory(element)
-        val newExpression = when {
-            KotlinBuiltIns.isInt(elementType) -> factory.createExpression(element.text.parseInt()?.toString() ?: return)
-            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("$0L", element.text.parseLong()?.toString() ?: return)
-            else -> return
-        }
-        element.replaced(newExpression)
+class ConvertToDecimalIntention : ConvertNumeralSystemIntention("Convert to decimal") {
+    override fun createIntegerExpression(element: KtConstantExpression): KtExpression? {
+        return KtPsiFactory(element).createExpression(element.text.parseInt()?.toString() ?: return null)
+    }
+
+    override fun createLongExpression(element: KtConstantExpression): KtExpression? {
+        return KtPsiFactory(element).createExpressionByPattern("$0L", element.text.parseLong()?.toString() ?: return null)
     }
 
     override fun isApplicableTo(element: KtConstantExpression): Boolean {
         if (!element.text.hasBinaryPrefix() && !element.text.hasHexPrefix()) return false
-        val elementType = element.getType(element.analyze()) ?: return false
-        return KotlinBuiltIns.isInt(elementType) || KotlinBuiltIns.isLong(elementType)
+        return super.isApplicableTo(element)
     }
 }

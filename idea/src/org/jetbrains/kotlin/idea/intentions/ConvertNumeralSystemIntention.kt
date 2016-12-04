@@ -16,5 +16,30 @@
 
 package org.jetbrains.kotlin.idea.intentions
 
-open class ConvertNumeralSystemIntention {
+import com.intellij.openapi.editor.Editor
+import org.jetbrains.kotlin.builtins.KotlinBuiltIns
+import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.core.replaced
+import org.jetbrains.kotlin.psi.KtConstantExpression
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.resolve.calls.callUtil.getType
+
+abstract class ConvertNumeralSystemIntention(text: String) : SelfTargetingOffsetIndependentIntention<KtConstantExpression>(KtConstantExpression::class.java, text) {
+    override fun applyTo(element: KtConstantExpression, editor: Editor?) {
+        val elementType = element.getType(element.analyze()) ?: return
+        val newExpression = when {
+            KotlinBuiltIns.isInt(elementType) -> createIntegerExpression(element) ?: return
+            KotlinBuiltIns.isLong(elementType) -> createLongExpression(element) ?: return
+            else -> return
+        }
+        element.replaced(newExpression)
+    }
+
+    override fun isApplicableTo(element: KtConstantExpression): Boolean {
+        val elementType = element.getType(element.analyze()) ?: return false
+        return KotlinBuiltIns.isInt(elementType) || KotlinBuiltIns.isLong(elementType)
+    }
+
+    abstract fun createIntegerExpression(element: KtConstantExpression): KtExpression?
+    abstract fun createLongExpression(element: KtConstantExpression): KtExpression?
 }

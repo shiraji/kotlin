@@ -27,21 +27,21 @@ import org.jetbrains.kotlin.psi.createExpressionByPattern
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 
-class ConvertToHexIntention : SelfTargetingOffsetIndependentIntention<KtConstantExpression>(KtConstantExpression::class.java, "Convert to hex") {
+class ConvertToDecimalIntention : SelfTargetingOffsetIndependentIntention<KtConstantExpression>(KtConstantExpression::class.java, "Convert to decimal") {
     override fun applyTo(element: KtConstantExpression, editor: Editor?) {
         val elementType = element.getType(element.analyze()) ?: return
         val targetExpression = element.getStrictParentOfType<KtPrefixExpression>() ?: element
         val factory = KtPsiFactory(element)
         val newExpression = when {
-            KotlinBuiltIns.isInt(elementType) -> factory.createExpressionByPattern("0x$0", java.lang.Integer.toHexString(targetExpression.text.parseInt() ?: return))
-            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("0x$0L", java.lang.Long.toHexString(targetExpression.text.parseLong() ?: return))
+            KotlinBuiltIns.isInt(elementType) -> factory.createExpression(targetExpression.text.parseInt()?.toString() ?: return)
+            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("$0L", targetExpression.text.parseLong()?.toString() ?: return)
             else -> return
         }
         targetExpression.replaced(newExpression)
     }
 
     override fun isApplicableTo(element: KtConstantExpression): Boolean {
-        if (element.text.hasHexPrefix()) return false
+        if (!element.text.hasBinaryPrefix() && !element.text.hasHexPrefix()) return false
         val elementType = element.getType(element.analyze()) ?: return false
         return KotlinBuiltIns.isInt(elementType) || KotlinBuiltIns.isLong(elementType)
     }

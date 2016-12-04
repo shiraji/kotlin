@@ -33,8 +33,8 @@ class ConvertToBinaryIntention : SelfTargetingOffsetIndependentIntention<KtConst
         val targetExpression = element.getStrictParentOfType<KtPrefixExpression>() ?: element
         val factory = KtPsiFactory(element)
         val newExpression = when {
-            KotlinBuiltIns.isInt(elementType) -> factory.createExpressionByPattern("0b$0", targetExpression.text.parseInt() ?: return)
-            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("0b$0L", targetExpression.text.parseLong() ?: return)
+            KotlinBuiltIns.isInt(elementType) -> factory.createExpressionByPattern("0b$0", java.lang.Integer.toBinaryString(targetExpression.text.parseInt() ?: return))
+            KotlinBuiltIns.isLong(elementType) -> factory.createExpressionByPattern("0b$0L", java.lang.Long.toBinaryString(targetExpression.text.parseLong() ?: return))
             else -> return
         }
         targetExpression.replaced(newExpression)

@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.idea.intentions
 
 import com.intellij.openapi.editor.Editor
+import org.jetbrains.kotlin.builtins.DefaultBuiltIns
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.idea.KotlinLightConstantExpressionEvaluator
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
@@ -24,8 +25,10 @@ import org.jetbrains.kotlin.idea.caches.resolve.analyzeFully
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtConstantExpression
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
+import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.kotlin.resolve.calls.callUtil.getType
+import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 
 class ComputeConstantExpressionIntention : SelfTargetingOffsetIndependentIntention<KtBinaryExpression>(KtBinaryExpression::class.java, "") {
 
@@ -37,6 +40,11 @@ class ComputeConstantExpressionIntention : SelfTargetingOffsetIndependentIntenti
 
 
         try {
+
+            val returnValue = ConstantExpressionEvaluator(DefaultBuiltIns.Instance).evaluateExpression(targetExpression, BindingTraceContext(), targetExpression.getType(targetExpression.analyze()) ?: return)
+            println(returnValue)
+
+
             val foo = KotlinLightConstantExpressionEvaluator().computeConstantExpression(targetExpression, true)
             println(foo)
         }

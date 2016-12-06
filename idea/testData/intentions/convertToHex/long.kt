@@ -1,0 +1,1 @@
+val foo = 10L<caret>

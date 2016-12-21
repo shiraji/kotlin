@@ -20,6 +20,8 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtBinaryExpression
+import org.jetbrains.kotlin.psi.KtContainerNode
+import org.jetbrains.kotlin.psi.KtContainerNodeForControlStructureBody
 import org.jetbrains.kotlin.psi.KtVisitorVoid
 
 class UnusedEqualsInspection : AbstractKotlinInspection() {
@@ -31,7 +33,9 @@ class UnusedEqualsInspection : AbstractKotlinInspection() {
 
                 if (expression.operationToken != KtTokens.EQEQ) return
 
-                expression.parent
+                when (expression.parent) {
+                    is KtContainerNode, is KtContainerNodeForControlStructureBody -> println(expression.parent)
+                }
 
             }
         }

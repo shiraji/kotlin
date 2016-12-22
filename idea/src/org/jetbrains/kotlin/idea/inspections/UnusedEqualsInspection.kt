@@ -16,13 +16,20 @@
 
 package org.jetbrains.kotlin.idea.inspections
 
+import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
+import org.jetbrains.kotlin.builtins.KotlinBuiltIns
+import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.intentions.branchedTransformations.evaluatesTo
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtBinaryExpression
-import org.jetbrains.kotlin.psi.KtContainerNode
-import org.jetbrains.kotlin.psi.KtContainerNodeForControlStructureBody
+import org.jetbrains.kotlin.psi.KtBlockExpression
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtVisitorVoid
+import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.lastBlockStatementOrThis
+import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 
 class UnusedEqualsInspection : AbstractKotlinInspection() {
 
@@ -30,13 +37,31 @@ class UnusedEqualsInspection : AbstractKotlinInspection() {
         return object : KtVisitorVoid() {
             override fun visitBinaryExpression(expression: KtBinaryExpression) {
                 super.visitBinaryExpression(expression)
-
                 if (expression.operationToken != KtTokens.EQEQ) return
-
-                when (expression.parent) {
-                    is KtContainerNode, is KtContainerNodeForControlStructureBody -> println(expression.parent)
+                val parent = expression.parent as? KtBlockExpression ?: return
+                when {
+                    expression.evaluatesTo(parent.lastBlockStatementOrThis()) -> expression.getStrictParentOfType<KtLambdaExpression>()?.visitLambdaExpression(holder, expression) ?: holder.registerUnusedEqualsProblem(expression)
+                    else -> holder.registerUnusedEqualsProblem(expression)
                 }
+            }
 
+            private fun KtLambdaExpression.visitLambdaExpression(holder: ProblemsHolder, expression: KtBinaryExpression) {
+                val lambdaType = getType(analyze()) ?: return
+                val lambdaTypeArguments = lambdaType.arguments
+                if (lambdaTypeArguments.size != 1) return
+                if (KotlinBuiltIns.isBoolean(lambdaTypeArguments[0].type)) {
+                    val lastBlockStatementOrThis = bodyExpression?.lastBlockStatementOrThis() ?: return
+                    if (!expression.evaluatesTo(lastBlockStatementOrThis)) holder.registerUnusedEqualsProblem(expression)
+                }
+                else {
+                    holder.registerUnusedEqualsProblem(expression)
+                }
+            }
+
+            private fun ProblemsHolder.registerUnusedEqualsProblem(expression: KtBinaryExpression) {
+                registerProblem(expression,
+                                "Unused equals expression",
+                                ProblemHighlightType.LIKE_UNUSED_SYMBOL)
             }
         }
     }

@@ -49,12 +49,12 @@ class UnusedEqualsInspection : AbstractKotlinInspection() {
                 val lambdaType = getType(analyze()) ?: return
                 val lambdaTypeArguments = lambdaType.arguments
                 if (lambdaTypeArguments.size != 1) return
-                if (KotlinBuiltIns.isBoolean(lambdaTypeArguments[0].type)) {
-                    val lastBlockStatementOrThis = bodyExpression?.lastBlockStatementOrThis() ?: return
-                    if (!expression.evaluatesTo(lastBlockStatementOrThis)) holder.registerUnusedEqualsProblem(expression)
-                }
-                else {
-                    holder.registerUnusedEqualsProblem(expression)
+                when {
+                    KotlinBuiltIns.isBoolean(lambdaTypeArguments[0].type) -> {
+                        val lastBlockStatementOrThis = bodyExpression?.lastBlockStatementOrThis() ?: return
+                        if (!expression.evaluatesTo(lastBlockStatementOrThis)) holder.registerUnusedEqualsProblem(expression)
+                    }
+                    else -> holder.registerUnusedEqualsProblem(expression)
                 }
             }
 

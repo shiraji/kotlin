@@ -22,6 +22,7 @@ import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.idea.intentions.branchedTransformations.evaluatesTo
+import org.jetbrains.kotlin.idea.refactoring.getLineNumber
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtBlockExpression
@@ -39,15 +40,16 @@ class UnusedEqualsInspection : AbstractKotlinInspection() {
                 super.visitBinaryExpression(expression)
                 if (expression.operationToken != KtTokens.EQEQ) return
                 val parent = expression.parent as? KtBlockExpression ?: return
+                val lastBlockStatement = parent.lastBlockStatementOrThis()
                 when {
-                    expression.evaluatesTo(parent.lastBlockStatementOrThis()) -> expression.getStrictParentOfType<KtLambdaExpression>()?.visitLambdaExpression(holder, expression) ?: holder.registerUnusedEqualsProblem(expression)
+                    expression.evaluatesTo(lastBlockStatement) && expression.getLineNumber() == lastBlockStatement.getLineNumber() ->
+                        expression.getStrictParentOfType<KtLambdaExpression>()?.visitLambdaExpression(holder, expression) ?: holder.registerUnusedEqualsProblem(expression)
                     else -> holder.registerUnusedEqualsProblem(expression)
                 }
             }
 
             private fun KtLambdaExpression.visitLambdaExpression(holder: ProblemsHolder, expression: KtBinaryExpression) {
-                val lambdaType = getType(analyze()) ?: return
-                val lambdaTypeArguments = lambdaType.arguments
+                val lambdaTypeArguments = getType(analyze())?.arguments ?: return
                 if (lambdaTypeArguments.size != 1) return
                 when {
                     KotlinBuiltIns.isBoolean(lambdaTypeArguments[0].type) -> {

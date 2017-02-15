@@ -16,6 +16,51 @@
 
 package org.jetbrains.kotlin.idea.intentions
 
-class ConvertToApplyIntention : ConvertToScopeIntention("Convert to apply") {
-    override fun getScopeBlockTemplate() = "$0.apply {}"
+import com.intellij.openapi.editor.Editor
+import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
+import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespaceAndComments
+
+class ConvertToApplyIntention : SelfTargetingIntention<KtDotQualifiedExpression>(KtDotQualifiedExpression::class.java, "Convert to apply") {
+    private val BLACKLIST_RECEIVER_NAME = listOf("this", "it")
+
+    override fun isApplicableTo(element: KtDotQualifiedExpression, caretOffset: Int): Boolean {
+        val receiverExpressionText = element.getLeftMostReceiverExpression().text
+        if (BLACKLIST_RECEIVER_NAME.contains(receiverExpressionText)) return false
+        val prevSibling = element.getPrevSiblingIgnoringWhitespaceAndComments(false)
+        return prevSibling != null && prevSibling.isApplicable(receiverExpressionText)
+    }
+
+    private fun PsiElement.isApplicable(receiverExpressionText: String): Boolean {
+        var targetElement = this
+        while (true) {
+            when (targetElement) {
+                is KtDotQualifiedExpression -> {
+                    if (targetElement.isApplicable(receiverExpressionText)) {
+                        targetElement = targetElement.prevSibling
+                    }
+                    else return false
+                }
+
+                else -> return false
+            }
+        }
+    }
+
+    private fun KtDotQualifiedExpression.isApplicable(receiverExpressionText: String): Boolean {
+        if (receiverExpressionText != getLeftMostReceiverExpression().text) return false
+        return callExpression?.isApplicable() ?: false
+    }
+
+    private fun KtCallExpression.isApplicable(): Boolean {
+        when {
+            lambdaArguments.isNotEmpty() -> return false
+            valueArguments.firstOrNull { BLACKLIST_RECEIVER_NAME.contains(it.text) } != null -> return false
+            else -> return true
+        }
+    }
+
+    override fun applyTo(element: KtDotQualifiedExpression, editor: Editor?) {
+    }
 }

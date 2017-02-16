@@ -67,34 +67,54 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
     override fun applyTo(element: KtExpression, editor: Editor?) {
 // todo ここから
         when (element) {
-            is KtProperty -> return element.isApplicable()
+            is KtProperty -> return element.applyTo()
             is KtDotQualifiedExpression -> return element.applyTo()
             else -> return
         }
     }
 
-    private fun KtDotQualifiedExpression.applyTo() {
-        val receiverExpression = getLeftMostReceiverExpression()
+    private fun KtProperty.applyTo() {
+        val receiverExpressionText = name ?: return
         val factory = KtPsiFactory(this)
-        val scopeBlockExpression = factory.createExpressionByPattern("", receiverExpression).apply { add(factory.createNewLine()) }
-        val callExpression = when (scopeBlockExpression) {
-            is KtCallExpression -> scopeBlockExpression
-            is KtQualifiedExpression -> scopeBlockExpression.callExpression
-            else -> return
-        }
-        val lambdaArguments = callExpression?.lambdaArguments ?: return
+        val right = initializer ?: return
+        val callExpression = factory.createExpressionByPattern("$1.apply{}", right).apply { add(factory.createNewLine()) } as? KtCallExpression ?: return
+        val lambdaArguments = callExpression.lambdaArguments
         val blockExpression = lambdaArguments[0].getLambdaExpression().bodyExpression ?: return
-        callExpression?.let { blockExpression.addAfter(it, blockExpression.lBrace) }
-        val receiverExpressionText = receiverExpression.text
-        val firstElement = blockExpression.addCallExpression(receiverExpressionText, this, true)
+        val firstElement = this
         val lastElement = blockExpression.addCallExpression(receiverExpressionText, this, false)
         val parent = parent
         val anchor = lastElement.nextSibling
         parent.deleteChildRange(firstElement, lastElement)
-        parent.addBefore(scopeBlockExpression, anchor)
+        parent.addBefore(callExpression, anchor)
+
+
+//        val receiverExpression = getLeftMostReceiverExpression()
+//        val callExpression = when (scopeBlockExpression) {
+//            is KtCallExpression -> scopeBlockExpression
+//            is KtQualifiedExpression -> scopeBlockExpression.callExpression
+//            else -> return
+//        }
+//        val lambdaArguments = callExpression?.lambdaArguments ?: return
+//        val blockExpression = lambdaArguments[0].getLambdaExpression().bodyExpression ?: return
+//        callExpression?.let { blockExpression.addAfter(it, blockExpression.lBrace) }
+//        val receiverExpressionText = receiverExpression.text
+//        val firstElement = blockExpression.addCallExpression(receiverExpressionText, this, true)
+//        val lastElement = blockExpression.addCallExpression(receiverExpressionText, this, false)
+//        val parent = parent
+//        val anchor = lastElement.nextSibling
+//        parent.deleteChildRange(firstElement, lastElement)
+//        parent.addBefore(scopeBlockExpression, anchor)
     }
 
-    private fun KtBlockExpression.addCallExpression(receiverExpressionText: String, element: KtDotQualifiedExpression, forward: Boolean): PsiElement {
+    private fun KtDotQualifiedExpression.applyTo() {
+        var targetElement = getPrevSiblingIgnoringWhitespaceAndComments(false)
+        while (targetElement is KtProperty) {
+            targetElement = getPrevSiblingIgnoringWhitespaceAndComments(false) ?: return
+        }
+        (targetElement as KtProperty).applyTo()
+    }
+
+    private fun KtBlockExpression.addCallExpression(receiverExpressionText: String, element: PsiElement, forward: Boolean): PsiElement {
         var targetElement: PsiElement = element
         while (true) {
             val sibling = if (forward) targetElement.prevSibling else targetElement.nextSibling

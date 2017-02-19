@@ -32,8 +32,7 @@ abstract class ConvertToScopeIntention(text: String) : SelfTargetingIntention<Kt
     override fun isApplicableTo(element: KtDotQualifiedExpression, caretOffset: Int): Boolean {
         val receiverExpressionText = element.getLeftMostReceiverExpression().text
         if (BLACKLIST_RECEIVER_NAME.contains(receiverExpressionText)) return false
-        val isApplicable = element.callExpression?.isApplicable() ?: false
-        if (!isApplicable) return false
+        if (!element.isApplicable(receiverExpressionText)) return false
         val nextSibling = element.getNextSiblingIgnoringWhitespaceAndComments(false) as? KtDotQualifiedExpression
         if (nextSibling != null && nextSibling.isApplicable(receiverExpressionText)) return true
         val prevSibling = element.getPrevSiblingIgnoringWhitespaceAndComments(false) as? KtDotQualifiedExpression
@@ -51,19 +50,23 @@ abstract class ConvertToScopeIntention(text: String) : SelfTargetingIntention<Kt
         }
         val lambdaArguments = callExpression?.lambdaArguments ?: return
         val blockExpression = lambdaArguments[0].getLambdaExpression().bodyExpression ?: return
-        element.callExpression?.let { blockExpression.addAfter(it, blockExpression.lBrace) }
         val receiverExpressionText = receiverExpression.text
-        val firstElement = blockExpression.addCallExpression(receiverExpressionText, element, true)
-        val lastElement = blockExpression.addCallExpression(receiverExpressionText, element, false)
+        val firstElement = addCallExpression(receiverExpressionText, element, true)
+        val lastElement = addCallExpression(receiverExpressionText, element, false)
         val parent = element.parent
-        val anchor = lastElement.nextSibling
+        val anchor = lastElement
+        blockExpression.addRange(firstElement, lastElement)
+        parent.addAfter(scopeBlockExpression, anchor)
         parent.deleteChildRange(firstElement, lastElement)
-        parent.addBefore(scopeBlockExpression, anchor)
     }
 
     private fun KtDotQualifiedExpression.isApplicable(receiverExpressionText: String): Boolean {
         if (receiverExpressionText != getLeftMostReceiverExpression().text) return false
-        return callExpression?.isApplicable() ?: false
+        val callExpression = callExpression ?: return false
+        if (!callExpression.isApplicable()) return false
+        val receiverExpression = receiverExpression
+        if (receiverExpression is KtDotQualifiedExpression) return receiverExpression.isApplicable(receiverExpressionText)
+        return true
     }
 
     private fun KtCallExpression.isApplicable(): Boolean {
@@ -74,7 +77,7 @@ abstract class ConvertToScopeIntention(text: String) : SelfTargetingIntention<Kt
         }
     }
 
-    private fun KtBlockExpression.addCallExpression(receiverExpressionText: String, element: KtDotQualifiedExpression, forward: Boolean): PsiElement {
+    private fun addCallExpression(receiverExpressionText: String, element: KtDotQualifiedExpression, forward: Boolean): PsiElement {
         var targetElement: PsiElement = element
         while (true) {
             val sibling = if (forward) targetElement.prevSibling else targetElement.nextSibling
@@ -82,14 +85,12 @@ abstract class ConvertToScopeIntention(text: String) : SelfTargetingIntention<Kt
                 is KtDotQualifiedExpression -> {
                     when {
                         sibling.isApplicable(receiverExpressionText) -> {
-                            sibling.callExpression?.let { if (forward) addAfter(it, lBrace) else addBefore(it, rBrace) }
                             targetElement = sibling
                         }
                         else -> return targetElement
                     }
                 }
                 is PsiComment, is PsiWhiteSpace -> {
-                    if (forward) addAfter(sibling, lBrace) else addBefore(sibling, rBrace)
                     targetElement = sibling
                 }
                 else -> return targetElement

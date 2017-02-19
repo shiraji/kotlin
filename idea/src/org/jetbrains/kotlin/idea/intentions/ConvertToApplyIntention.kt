@@ -42,18 +42,35 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
         return nextSibling != null && nextSibling.isApplicable(localVariableName)
     }
 
-    private fun KtDotQualifiedExpression.isApplicable(): Boolean {
-        val receiverExpressionText = getLeftMostReceiverExpression().text
-        var targetElement: PsiElement = this
-        while (targetElement is KtDotQualifiedExpression && targetElement.isApplicable(receiverExpressionText)) {
-            targetElement = targetElement.getPrevSiblingIgnoringWhitespaceAndComments(false) ?: return false
+    private fun KtDotQualifiedExpression.isApplicable() = isApplicable(getLeftMostReceiverExpression().text)
+
+    private fun KtDotQualifiedExpression.findTargetProperty(receiverExpressionText: String): KtProperty? {
+        val target = getPrevSiblingIgnoringWhitespaceAndComments(false)
+        when (target) {
+            is KtProperty -> if (target.name == receiverExpressionText) return target
+            is KtDotQualifiedExpression -> if (target.getLeftMostReceiverExpression().text == receiverExpressionText) return target.findTargetProperty(receiverExpressionText)
         }
-        return targetElement is KtProperty && targetElement.name == receiverExpressionText
+        return null
+    }
+
+    private fun KtProperty.findApplicableLastExpression(): PsiElement {
+        var targetElement: PsiElement = this
+        while (true) {
+            val sibling = targetElement.nextSibling
+            when (sibling) {
+                is KtDotQualifiedExpression, is PsiComment, is PsiWhiteSpace -> targetElement = sibling
+                else -> return targetElement
+            }
+        }
     }
 
     private fun KtDotQualifiedExpression.isApplicable(receiverExpressionText: String): Boolean {
         if (receiverExpressionText != getLeftMostReceiverExpression().text) return false
-        return callExpression?.isApplicable() ?: false
+        val callExpression = callExpression ?: return false
+        if (!callExpression.isApplicable()) return false
+        val receiverExpression = receiverExpression
+        if (receiverExpression is KtDotQualifiedExpression) return receiverExpression.isApplicable(receiverExpressionText)
+        return true
     }
 
     private fun KtCallExpression.isApplicable(): Boolean {
@@ -65,75 +82,53 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
     }
 
     override fun applyTo(element: KtExpression, editor: Editor?) {
-// todo ここから
         when (element) {
-            is KtProperty -> return element.applyTo()
-            is KtDotQualifiedExpression -> return element.applyTo()
-            else -> return
+            is KtProperty -> element.applyTo()
+            is KtDotQualifiedExpression -> element.findTargetProperty(element.getLeftMostReceiverExpression().text)?.applyTo()
         }
     }
 
     private fun KtProperty.applyTo() {
         val receiverExpressionText = name ?: return
         val factory = KtPsiFactory(this)
-        val right = initializer ?: return
-        val callExpression = factory.createExpressionByPattern("$1.apply{}", right).apply { add(factory.createNewLine()) } as? KtCallExpression ?: return
-        val lambdaArguments = callExpression.lambdaArguments
+        val property = factory.createProperty(receiverExpressionText, typeReference?.text, isVar, "${initializer?.text}.apply{}")
+        val lambdaArguments = (property.initializer as? KtQualifiedExpression)?.callExpression?.lambdaArguments ?: return
         val blockExpression = lambdaArguments[0].getLambdaExpression().bodyExpression ?: return
-        val firstElement = this
-        val lastElement = blockExpression.addCallExpression(receiverExpressionText, this, false)
         val parent = parent
-        val anchor = lastElement.nextSibling
-        parent.deleteChildRange(firstElement, lastElement)
-        parent.addBefore(callExpression, anchor)
-
-
-//        val receiverExpression = getLeftMostReceiverExpression()
-//        val callExpression = when (scopeBlockExpression) {
-//            is KtCallExpression -> scopeBlockExpression
-//            is KtQualifiedExpression -> scopeBlockExpression.callExpression
-//            else -> return
-//        }
-//        val lambdaArguments = callExpression?.lambdaArguments ?: return
-//        val blockExpression = lambdaArguments[0].getLambdaExpression().bodyExpression ?: return
-//        callExpression?.let { blockExpression.addAfter(it, blockExpression.lBrace) }
-//        val receiverExpressionText = receiverExpression.text
-//        val firstElement = blockExpression.addCallExpression(receiverExpressionText, this, true)
-//        val lastElement = blockExpression.addCallExpression(receiverExpressionText, this, false)
-//        val parent = parent
-//        val anchor = lastElement.nextSibling
-//        parent.deleteChildRange(firstElement, lastElement)
-//        parent.addBefore(scopeBlockExpression, anchor)
+        val lastExpression = findApplicableLastExpression()
+        blockExpression.addRange(this.nextSibling, lastExpression)
+        blockExpression.children
+                .map { it as? KtDotQualifiedExpression }
+                .filterNotNull()
+                .forEach { it.replaceFirstReceiver(factory, it.receiverExpression) }
+        parent.addBefore(property, this)
+        parent.deleteChildRange(this, lastExpression)
     }
 
-    private fun KtDotQualifiedExpression.applyTo() {
-        var targetElement = getPrevSiblingIgnoringWhitespaceAndComments(false)
-        while (targetElement is KtProperty) {
-            targetElement = getPrevSiblingIgnoringWhitespaceAndComments(false) ?: return
-        }
-        (targetElement as KtProperty).applyTo()
-    }
-
-    private fun KtBlockExpression.addCallExpression(receiverExpressionText: String, element: PsiElement, forward: Boolean): PsiElement {
+    private fun KtBlockExpression.addCallExpression(receiverExpressionText: String, element: PsiElement) {
         var targetElement: PsiElement = element
         while (true) {
-            val sibling = if (forward) targetElement.prevSibling else targetElement.nextSibling
+            val sibling = targetElement.nextSibling
             when (sibling) {
                 is KtDotQualifiedExpression -> {
                     when {
                         sibling.isApplicable(receiverExpressionText) -> {
-                            sibling.callExpression?.let { if (forward) addAfter(it, lBrace) else addBefore(it, rBrace) }
+                            addBefore(sibling.remodeLeftMostExpresssion(), rBrace)
                             targetElement = sibling
                         }
-                        else -> return targetElement
                     }
                 }
                 is PsiComment, is PsiWhiteSpace -> {
-                    if (forward) addAfter(sibling, lBrace) else addBefore(sibling, rBrace)
+                    addBefore(sibling, rBrace)
                     targetElement = sibling
                 }
-                else -> return targetElement
             }
         }
+    }
+
+    private fun KtDotQualifiedExpression.remodeLeftMostExpresssion(): KtDotQualifiedExpression {
+        getLeftMostReceiverExpression().delete()
+
+        return this
     }
 }

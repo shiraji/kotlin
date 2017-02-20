@@ -17,9 +17,7 @@
 package org.jetbrains.kotlin.idea.intentions
 
 import com.intellij.openapi.editor.Editor
-import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getNextSiblingIgnoringWhitespaceAndComments
 import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespaceAndComments
@@ -28,10 +26,10 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
     private val BLACKLIST_RECEIVER_NAME = listOf("this", "it")
 
     override fun isApplicableTo(element: KtExpression, caretOffset: Int): Boolean {
-        when (element) {
-            is KtProperty -> return element.isApplicable()
-            is KtDotQualifiedExpression -> return element.isApplicable()
-            else -> return false
+        return when (element) {
+            is KtProperty -> element.isApplicable()
+            is KtDotQualifiedExpression -> element.findTargetProperty(element.getLeftMostReceiverExpression().text)?.isApplicable() ?: false
+            else -> false
         }
     }
 
@@ -42,13 +40,11 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
         return nextSibling != null && nextSibling.isApplicable(localVariableName)
     }
 
-    private fun KtDotQualifiedExpression.isApplicable() = isApplicable(getLeftMostReceiverExpression().text)
-
     private fun KtDotQualifiedExpression.findTargetProperty(receiverExpressionText: String): KtProperty? {
         val target = getPrevSiblingIgnoringWhitespaceAndComments(false)
         when (target) {
             is KtProperty -> if (target.name == receiverExpressionText) return target
-            is KtDotQualifiedExpression -> if (target.getLeftMostReceiverExpression().text == receiverExpressionText) return target.findTargetProperty(receiverExpressionText)
+            is KtDotQualifiedExpression -> if (target.isApplicable(receiverExpressionText)) return target.findTargetProperty(receiverExpressionText)
         }
         return null
     }
@@ -56,9 +52,9 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
     private fun KtProperty.findApplicableLastExpression(): PsiElement {
         var targetElement: PsiElement = this
         while (true) {
-            val sibling = targetElement.nextSibling
+            val sibling = targetElement.getNextSiblingIgnoringWhitespaceAndComments(false)
             when (sibling) {
-                is KtDotQualifiedExpression, is PsiComment, is PsiWhiteSpace -> targetElement = sibling
+                is KtDotQualifiedExpression -> targetElement = sibling
                 else -> return targetElement
             }
         }
@@ -100,35 +96,9 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
         blockExpression.children
                 .map { it as? KtDotQualifiedExpression }
                 .filterNotNull()
-                .forEach { it.replaceFirstReceiver(factory, it.receiverExpression) }
+                .forEach { it.deleteFirstReceiver() }
         parent.addBefore(property, this)
         parent.deleteChildRange(this, lastExpression)
     }
 
-    private fun KtBlockExpression.addCallExpression(receiverExpressionText: String, element: PsiElement) {
-        var targetElement: PsiElement = element
-        while (true) {
-            val sibling = targetElement.nextSibling
-            when (sibling) {
-                is KtDotQualifiedExpression -> {
-                    when {
-                        sibling.isApplicable(receiverExpressionText) -> {
-                            addBefore(sibling.remodeLeftMostExpresssion(), rBrace)
-                            targetElement = sibling
-                        }
-                    }
-                }
-                is PsiComment, is PsiWhiteSpace -> {
-                    addBefore(sibling, rBrace)
-                    targetElement = sibling
-                }
-            }
-        }
-    }
-
-    private fun KtDotQualifiedExpression.remodeLeftMostExpresssion(): KtDotQualifiedExpression {
-        getLeftMostReceiverExpression().delete()
-
-        return this
-    }
 }

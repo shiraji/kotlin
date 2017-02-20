@@ -17,9 +17,7 @@
 package org.jetbrains.kotlin.idea.intentions
 
 import com.intellij.openapi.editor.Editor
-import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getNextSiblingIgnoringWhitespaceAndComments
 import org.jetbrains.kotlin.psi.psiUtil.getPrevSiblingIgnoringWhitespaceAndComments
@@ -42,7 +40,7 @@ abstract class ConvertToScopeIntention(text: String) : SelfTargetingIntention<Kt
     override fun applyTo(element: KtDotQualifiedExpression, editor: Editor?) {
         val receiverExpression = element.getLeftMostReceiverExpression()
         val factory = KtPsiFactory(element)
-        val scopeBlockExpression = factory.createExpressionByPattern(getScopeBlockTemplate(), receiverExpression).apply { add(factory.createNewLine()) }
+        val scopeBlockExpression = factory.createExpressionByPattern(getScopeBlockTemplate(), receiverExpression)
         val callExpression = when (scopeBlockExpression) {
             is KtCallExpression -> scopeBlockExpression
             is KtQualifiedExpression -> scopeBlockExpression.callExpression
@@ -51,12 +49,15 @@ abstract class ConvertToScopeIntention(text: String) : SelfTargetingIntention<Kt
         val lambdaArguments = callExpression?.lambdaArguments ?: return
         val blockExpression = lambdaArguments[0].getLambdaExpression().bodyExpression ?: return
         val receiverExpressionText = receiverExpression.text
-        val firstElement = addCallExpression(receiverExpressionText, element, true)
-        val lastElement = addCallExpression(receiverExpressionText, element, false)
+        val firstElement = findBoundary(receiverExpressionText, element, true)
+        val lastElement = findBoundary(receiverExpressionText, element, false)
         val parent = element.parent
-        val anchor = lastElement
         blockExpression.addRange(firstElement, lastElement)
-        parent.addAfter(scopeBlockExpression, anchor)
+        blockExpression.children
+                .map { it as? KtDotQualifiedExpression }
+                .filterNotNull()
+                .forEach { it.deleteFirstReceiver() }
+        parent.addBefore(scopeBlockExpression, firstElement)
         parent.deleteChildRange(firstElement, lastElement)
     }
 
@@ -77,22 +78,12 @@ abstract class ConvertToScopeIntention(text: String) : SelfTargetingIntention<Kt
         }
     }
 
-    private fun addCallExpression(receiverExpressionText: String, element: KtDotQualifiedExpression, forward: Boolean): PsiElement {
+    private fun findBoundary(receiverExpressionText: String, element: KtDotQualifiedExpression, forward: Boolean): PsiElement {
         var targetElement: PsiElement = element
         while (true) {
-            val sibling = if (forward) targetElement.prevSibling else targetElement.nextSibling
-            when (sibling) {
-                is KtDotQualifiedExpression -> {
-                    when {
-                        sibling.isApplicable(receiverExpressionText) -> {
-                            targetElement = sibling
-                        }
-                        else -> return targetElement
-                    }
-                }
-                is PsiComment, is PsiWhiteSpace -> {
-                    targetElement = sibling
-                }
+            val sibling = if (forward) targetElement.getPrevSiblingIgnoringWhitespaceAndComments(false) else targetElement.getNextSiblingIgnoringWhitespaceAndComments(false)
+            when {
+                sibling is KtDotQualifiedExpression && sibling.isApplicable(receiverExpressionText) -> targetElement = sibling
                 else -> return targetElement
             }
         }

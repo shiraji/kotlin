@@ -6362,6 +6362,24 @@ public class IntentionTestGenerated extends AbstractIntentionTest {
             doTest(fileName);
         }
 
+        @TestMetadata("methodChain.kt")
+        public void testMethodChain() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToRun/methodChain.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("methodChainWithItParameter.kt")
+        public void testMethodChainWithItParameter() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToRun/methodChainWithItParameter.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("methodChainWithThisParameter.kt")
+        public void testMethodChainWithThisParameter() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToRun/methodChainWithThisParameter.kt");
+            doTest(fileName);
+        }
+
         @TestMetadata("normal.kt")
         public void testNormal() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToRun/normal.kt");
@@ -6654,6 +6672,24 @@ public class IntentionTestGenerated extends AbstractIntentionTest {
         @TestMetadata("itReceiver.kt")
         public void testItReceiver() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToWith/itReceiver.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("methodChain.kt")
+        public void testMethodChain() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToWith/methodChain.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("methodChainWithItParameter.kt")
+        public void testMethodChainWithItParameter() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToWith/methodChainWithItParameter.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("methodChainWithThisParameter.kt")
+        public void testMethodChainWithThisParameter() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToWith/methodChainWithThisParameter.kt");
             doTest(fileName);
         }
 

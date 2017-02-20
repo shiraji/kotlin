@@ -6,15 +6,15 @@ class MyClass {
     fun foo3() = Unit
 
     fun foo4(a: MyClass) {
+        // top comment
         with(a) {
-            // here is comment
             foo1()
             // comment
 
             // bbb
             foo2()
             foo3()
-            // last comment
         }
+        // last comment
     }
 }

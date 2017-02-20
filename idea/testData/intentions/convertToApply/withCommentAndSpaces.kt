@@ -6,6 +6,7 @@ class MyClass {
     fun foo3() = Unit
 
     fun foo4(a: MyClass) {
+        // top comment
         val a = MyClass()
         // here is comment
         a.foo1()<caret>

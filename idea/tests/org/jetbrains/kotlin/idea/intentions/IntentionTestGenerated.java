@@ -5600,9 +5600,21 @@ public class IntentionTestGenerated extends AbstractIntentionTest {
             KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/intentions/convertToApply"), Pattern.compile("^([\\w\\-_]+)\\.kt$"), TargetBackend.ANY, true);
         }
 
-        @TestMetadata("itReceiver.kt")
-        public void testItReceiver() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/itReceiver.kt");
+        @TestMetadata("methodChain.kt")
+        public void testMethodChain() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/methodChain.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("methodChainWithItParameter.kt")
+        public void testMethodChainWithItParameter() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/methodChainWithItParameter.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("methodChainWithThisParameter.kt")
+        public void testMethodChainWithThisParameter() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/methodChainWithThisParameter.kt");
             doTest(fileName);
         }
 
@@ -5630,15 +5642,21 @@ public class IntentionTestGenerated extends AbstractIntentionTest {
             doTest(fileName);
         }
 
-        @TestMetadata("thisReceiver.kt")
-        public void testThisReceiver() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/thisReceiver.kt");
+        @TestMetadata("thisParameter2.kt")
+        public void testThisParameter2() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/thisParameter2.kt");
             doTest(fileName);
         }
 
         @TestMetadata("untilThisParameter.kt")
         public void testUntilThisParameter() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/untilThisParameter.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("var.kt")
+        public void testVar() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/convertToApply/var.kt");
             doTest(fileName);
         }
 

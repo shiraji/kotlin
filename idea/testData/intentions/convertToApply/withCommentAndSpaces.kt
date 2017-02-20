@@ -6,6 +6,7 @@ class MyClass {
     fun foo3() = Unit
 
     fun foo4(a: MyClass) {
+        val a = MyClass()
         // here is comment
         a.foo1()<caret>
         // comment
@@ -13,6 +14,6 @@ class MyClass {
         // bbb
         a.foo2()
         a.foo3()
-        // last comment
+        // last comment won't be in
     }
 }

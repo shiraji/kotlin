@@ -28,7 +28,10 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
     override fun isApplicableTo(element: KtExpression, caretOffset: Int): Boolean {
         return when (element) {
             is KtProperty -> element.isApplicable()
-            is KtDotQualifiedExpression -> element.findTargetProperty(element.getLeftMostReceiverExpression().text)?.isApplicable() ?: false
+            is KtDotQualifiedExpression -> {
+                val receiverExpressionText = element.getLeftMostReceiverExpression().text
+                element.isApplicable(receiverExpressionText) && element.findTargetProperty(receiverExpressionText)?.isApplicable() ?: false
+            }
             else -> false
         }
     }
@@ -49,14 +52,12 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
         return null
     }
 
-    private fun KtProperty.findApplicableLastExpression(): PsiElement {
+    private fun KtProperty.findApplicableLastExpression(receiverExpressionText: String): PsiElement {
         var targetElement: PsiElement = this
         while (true) {
             val sibling = targetElement.getNextSiblingIgnoringWhitespaceAndComments(false)
-            when (sibling) {
-                is KtDotQualifiedExpression -> targetElement = sibling
-                else -> return targetElement
-            }
+            if (sibling !is KtDotQualifiedExpression || !sibling.isApplicable(receiverExpressionText)) return targetElement
+            targetElement = sibling
         }
     }
 
@@ -91,7 +92,7 @@ class ConvertToApplyIntention : SelfTargetingIntention<KtExpression>(KtExpressio
         val lambdaArguments = (property.initializer as? KtQualifiedExpression)?.callExpression?.lambdaArguments ?: return
         val blockExpression = lambdaArguments[0].getLambdaExpression().bodyExpression ?: return
         val parent = parent
-        val lastExpression = findApplicableLastExpression()
+        val lastExpression = findApplicableLastExpression(receiverExpressionText)
         blockExpression.addRange(this.nextSibling, lastExpression)
         blockExpression.children
                 .map { it as? KtDotQualifiedExpression }

@@ -6,7 +6,7 @@ class MyClass {
     fun foo3() = Unit
 
     fun foo4(a: MyClass) {
-        a.apply {
+        val a = MyClass().apply {
             // here is comment
             foo1()
             // comment
@@ -14,7 +14,7 @@ class MyClass {
             // bbb
             foo2()
             foo3()
-            // last comment
         }
+        // last comment won't be in
     }
 }

@@ -6,9 +6,10 @@ class MyClass {
     fun foo3() = Unit
 
     fun foo4() {
-        val a = MyClass()
-        a.foo1()<caret>
-        a.foo2()
-        a.foo3()
+        var a = MyClass().apply {
+            foo1()
+            foo2()
+            foo3()
+        }
     }
 }

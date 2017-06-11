@@ -20,12 +20,14 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
+import org.jetbrains.kotlin.builtins.isFunctionType
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import org.jetbrains.kotlin.diagnostics.Errors.*
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.getNextSiblingIgnoringWhitespace
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.bindingContextUtil.recordDataFlowInfo
@@ -152,7 +154,7 @@ class CallExpressionResolver(
                 call, newContext, CheckArgumentTypesMode.CHECK_VALUE_ARGUMENTS, initialDataFlowInfoForArguments)
         if (resolveResult) {
             val functionDescriptor = resolvedCall?.resultingDescriptor
-            if (functionDescriptor !is ConstructorDescriptor) {
+            if (!functionDescriptor.isValidSimpleNameFunction(nameExpression)) {
                 temporaryForFunction.commit()
                 val hasValueParameters = functionDescriptor == null || functionDescriptor.valueParameters.size > 0
                 context.trace.report(FUNCTION_CALL_EXPECTED.on(nameExpression, nameExpression, hasValueParameters))
@@ -167,6 +169,14 @@ class CallExpressionResolver(
             temporaryForQualifier.commit()
         } ?: temporaryForVariable.commit()
         return noTypeInfo(context)
+    }
+
+    private fun FunctionDescriptor?.isValidSimpleNameFunction(expression: KtSimpleNameExpression): Boolean {
+        this ?: return false
+        if (this is ConstructorDescriptor) return true
+        return valueParameters.size == 1
+               && valueParameters[0].type.isFunctionType
+               && expression.parent.getNextSiblingIgnoringWhitespace() is KtLambdaExpression
     }
 
     fun getCallExpressionTypeInfo(

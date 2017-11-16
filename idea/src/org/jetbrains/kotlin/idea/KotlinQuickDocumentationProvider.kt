@@ -22,7 +22,9 @@ import com.intellij.codeInsight.javadoc.JavaDocInfoGeneratorFactory
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.lang.java.JavaDocumentationProvider
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.kotlin.asJava.LightClassUtil
@@ -89,6 +91,11 @@ class HtmlClassifierNamePolicy(val base: ClassifierNamePolicy) : ClassifierNameP
 }
 
 class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() {
+
+    override fun getCustomDocumentationElement(editor: Editor, file: PsiFile, contextElement: PsiElement?): PsiElement? {
+        if(contextElement?.text == "lateinit") return contextElement
+        return null
+    }
 
     override fun getQuickNavigateInfo(element: PsiElement?, originalElement: PsiElement?): String? {
         return if (element == null) null else getText(element, originalElement, true)
@@ -217,6 +224,9 @@ class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() {
             else if (element is KtLightDeclaration<*, *>) {
                 val origin = element.kotlinOrigin ?: return null
                 return renderKotlinDeclaration(origin, quickNavigation)
+            }
+            else if (element.text == "lateinit") {
+                return "lateinitやで"
             }
 
             if (quickNavigation) {

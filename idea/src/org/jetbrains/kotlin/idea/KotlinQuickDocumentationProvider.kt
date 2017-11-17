@@ -45,6 +45,7 @@ import org.jetbrains.kotlin.idea.resolve.frontendService
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocSection
+import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.*
 import org.jetbrains.kotlin.renderer.ClassifierNamePolicy
@@ -93,8 +94,11 @@ class HtmlClassifierNamePolicy(val base: ClassifierNamePolicy) : ClassifierNameP
 class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() {
 
     override fun getCustomDocumentationElement(editor: Editor, file: PsiFile, contextElement: PsiElement?): PsiElement? {
-        if(contextElement?.text == "lateinit") return contextElement
-        return null
+        return if (contextElement.isLateinit()
+                   || contextElement.isInner()
+                   || contextElement.isOperator()
+                   || contextElement.isOut()) contextElement
+        else null
     }
 
     override fun getQuickNavigateInfo(element: PsiElement?, originalElement: PsiElement?): String? {
@@ -225,8 +229,17 @@ class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() {
                 val origin = element.kotlinOrigin ?: return null
                 return renderKotlinDeclaration(origin, quickNavigation)
             }
-            else if (element.text == "lateinit") {
-                return "lateinitやで"
+            else if (element.isLateinit()) {
+                return "It is lateinit!"
+            }
+            else if (element.isInner()) {
+                return "It's inner"
+            }
+            else if (element.isOperator()) {
+                return "operator keyword"
+            }
+            else if(element.isOut()) {
+                return "out ope"
             }
 
             if (quickNavigation) {
@@ -372,5 +385,10 @@ class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() {
                 else -> null
             }
         }
+
+        private fun PsiElement?.isLateinit() = this?.text == KtTokens.LATEINIT_KEYWORD.value && parent is KtModifierList
+        private fun PsiElement?.isInner() = this?.text == KtTokens.INNER_KEYWORD.value && parent is KtModifierList
+        private fun PsiElement?.isOperator() = this?.text == KtTokens.OPERATOR_KEYWORD.value && parent is KtModifierList
+        private fun PsiElement?.isOut() = this?.text == KtTokens.OUT_KEYWORD.value && parent is KtModifierList
     }
 }

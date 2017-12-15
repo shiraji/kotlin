@@ -129,6 +129,18 @@ public class QuickDocProviderTestGenerated extends AbstractQuickDocProviderTest 
         runTest("idea/testData/editor/quickDoc/KotlinPackageClassUsedFromJava.java");
     }
 
+    @TestMetadata("Lateinit.kt")
+    public void testLateinit() throws Exception {
+        String fileName = KotlinTestUtils.navigationMetadata("idea/testData/editor/quickDoc/Lateinit.kt");
+        doTest(fileName);
+    }
+
+    @TestMetadata("LateinitName.kt")
+    public void testLateinitName() throws Exception {
+        String fileName = KotlinTestUtils.navigationMetadata("idea/testData/editor/quickDoc/LateinitName.kt");
+        doTest(fileName);
+    }
+
     @TestMetadata("MethodFromStdLib.kt")
     public void testMethodFromStdLib() throws Exception {
         runTest("idea/testData/editor/quickDoc/MethodFromStdLib.kt");

@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.Editor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getCallNameExpression
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getNonStrictParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
@@ -24,13 +25,19 @@ class AddLabeledReturnInLambdaIntention :
         if (block.statements.lastOrNull() != element) return false
         val callExpression = element.getStrictParentOfType<KtCallExpression>() ?: return false
         val index = callExpression.valueArguments.indexOfFirst {
-            val lambda = it.getArgumentExpression() as? KtLambdaExpression
-            lambda?.bodyExpression == block
+            val argumentExpression = it.getArgumentExpression()
+            val lambda = when(argumentExpression) {
+                is KtLambdaExpression -> argumentExpression
+                is KtLabeledExpression -> argumentExpression.getChildOfType() ?: return false
+                else -> return false
+            }
+            lambda.bodyExpression == block
         }
         if (index < 0) return false
         val resolvedCall = callExpression.getResolvedCall(callExpression.analyze()) ?: return false
         if (resolvedCall.candidateDescriptor.valueParameters[index].type.arguments.last().type.isUnit()) return false
-        val labelName = callExpression.getCallNameExpression()?.text ?: return false
+        val lambdaLabelName = (callExpression.valueArguments[index].getArgumentExpression() as? KtLabeledExpression)?.getLabelName()
+        val labelName = if(lambdaLabelName == null) callExpression.getCallNameExpression()?.text else lambdaLabelName
         text = "Add return@$labelName"
         return true
     }

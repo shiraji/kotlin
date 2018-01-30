@@ -13233,6 +13233,12 @@ public class IntentionTestGenerated extends AbstractIntentionTest {
             KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/intentions/removeLabeledReturnInLambda"), Pattern.compile("^([\\w\\-_]+)\\.(kt|kts)$"), TargetBackend.ANY, true);
         }
 
+        @TestMetadata("labeledLambda.kt")
+        public void testLabeledLambda() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/removeLabeledReturnInLambda/labeledLambda.kt");
+            doTest(fileName);
+        }
+
         @TestMetadata("normal.kt")
         public void testNormal() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/removeLabeledReturnInLambda/normal.kt");

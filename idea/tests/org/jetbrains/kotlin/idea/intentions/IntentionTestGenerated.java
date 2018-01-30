@@ -378,6 +378,12 @@ public class IntentionTestGenerated extends AbstractIntentionTest {
             doTest(fileName);
         }
 
+        @TestMetadata("labeledLambda.kt")
+        public void testLabeledLambda() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/addLabeledReturnInLambda/labeledLambda.kt");
+            doTest(fileName);
+        }
+
         @TestMetadata("loop.kt")
         public void testLoop() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("idea/testData/intentions/addLabeledReturnInLambda/loop.kt");

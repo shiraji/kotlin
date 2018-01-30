@@ -7,10 +7,9 @@ package org.jetbrains.kotlin.idea.intentions
 
 import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.openapi.editor.Editor
-import org.jetbrains.kotlin.psi.KtBlockExpression
-import org.jetbrains.kotlin.psi.KtCallExpression
-import org.jetbrains.kotlin.psi.KtReturnExpression
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getCallNameExpression
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 
 class RemoveLabeledReturnInLambdaIntention :
@@ -19,10 +18,20 @@ class RemoveLabeledReturnInLambdaIntention :
     override fun isApplicableTo(element: KtReturnExpression, caretOffset: Int): Boolean {
         val labelName = element.getLabelName() ?: return false
         val callExpression = element.getStrictParentOfType<KtCallExpression>() ?: return false
-        val callName = callExpression.getCallNameExpression()?.text ?: return false
-        if (labelName != callName) return false
         val block = element.getStrictParentOfType<KtBlockExpression>() ?: return false
         if (block.statements.lastOrNull() != element) return false
+        val lambdaArgument = callExpression.lambdaArguments.firstOrNull {
+            val argumentExpression = it.getArgumentExpression()
+            val lambda = when(argumentExpression) {
+                is KtLambdaExpression -> argumentExpression
+                is KtLabeledExpression -> argumentExpression.getChildOfType() ?: return false
+                else -> return false
+            }
+            lambda.bodyExpression == block
+        } ?: return false
+        val lambdaLabelName = (lambdaArgument.getArgumentExpression() as? KtLabeledExpression)?.getLabelName()
+        val callName = if(lambdaLabelName == null) callExpression.getCallNameExpression()?.text ?: return false else lambdaLabelName
+        if (labelName != callName) return false
         text = "Remove return@$labelName"
         return true
     }

@@ -7,34 +7,33 @@ package org.jetbrains.kotlin.idea.intentions
 
 import com.intellij.codeInsight.intention.LowPriorityAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.util.TextRange
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.getCallNameExpression
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
-import org.jetbrains.kotlin.psi.psiUtil.getNonStrictParentOfType
-import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.*
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.kotlin.types.typeUtil.isUnit
 
 class AddLabeledReturnInLambdaIntention :
-        SelfTargetingIntention<KtExpression>(KtExpression::class.java, "Add labeled return to last expression in a lambda"),
+        SelfTargetingRangeIntention<KtLambdaExpression>(KtLambdaExpression::class.java, "Add labeled return to last expression in a lambda"),
         LowPriorityAction {
-    override fun isApplicableTo(element: KtExpression, caretOffset: Int): Boolean {
-        if (element.getNonStrictParentOfType<KtReturnExpression>() != null) return false
-        val labelName = createLabelName(element) ?: return false
+    override fun applicabilityRange(element: KtLambdaExpression): TextRange? {
+        if (element.getNonStrictParentOfType<KtReturnExpression>() != null) return null
+        val labelName = createLabelName(element) ?: return null
         text = "Add return@$labelName"
-        return true
+        val lastStatement = element.bodyExpression?.statements?.last() ?: return null
+        return lastStatement.textRange
     }
 
-    override fun applyTo(element: KtExpression, editor: Editor?) {
+    override fun applyTo(element: KtLambdaExpression, editor: Editor?) {
         val labelName = createLabelName(element) ?: return
-        val newExpression = KtPsiFactory(element.project).createExpression("return@$labelName ${element.text}")
-        element.replace(newExpression)
+        val lastStatement = element.bodyExpression?.statements?.last() ?: return
+        val newExpression = KtPsiFactory(element.project).createExpression("return@$labelName ${lastStatement.text}")
+        lastStatement.replace(newExpression)
     }
 
-    private fun createLabelName(element: KtExpression): String? {
-        val block = element.getStrictParentOfType<KtBlockExpression>() ?: return null
-        if (block.statements.lastOrNull() != element) return null
+    private fun createLabelName(element: KtLambdaExpression): String? {
+        val block = element.bodyExpression ?: return null
         val callExpression = element.getStrictParentOfType<KtCallExpression>() ?: return null
         val index = callExpression.valueArguments.indexOfFirst {
             val argumentExpression = it.getArgumentExpression()

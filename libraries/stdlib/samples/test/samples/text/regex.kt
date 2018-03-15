@@ -22,4 +22,16 @@ class Regexps {
         // destructured group values only contain values of the groups, excluding the zeroth group.
         assertPrints(numberedGroupValues, "[John, 9731879]")
     }
+
+    @Sample
+    fun find() {
+        val inputString = "foobarfoo"
+        val regex = "foo".toRegex()
+        assertTrue(regex.find(inputString) != null)
+
+        val noFoo = "barbarbar"
+        assertFalse(regex.find(noFoo) != null)
+
+        assertPrints(regex.find(inputString, 1)?.range?.first, "6")
+    }
 }

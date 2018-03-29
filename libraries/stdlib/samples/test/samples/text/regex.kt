@@ -25,8 +25,8 @@ class Regexps {
 
     @Sample
     fun find() {
-        val inputString = "foobarfoo"
-        val regex = "foo".toRegex()
+        val inputString = "to be or not to be"
+        val regex = ".*be".toRegex()
         assertTrue(regex.find(inputString) != null)
 
         val noFoo = "barbarbar"

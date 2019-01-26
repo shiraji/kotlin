@@ -279,10 +279,11 @@ class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() {
             } else if (element is KtLightDeclaration<*, *>) {
                 val origin = element.kotlinOrigin ?: return null
                 return renderKotlinDeclaration(origin, quickNavigation)
-            }
-            else if (element.isModifier()) {
-                // TODO: render doc based on the modifier
-                return "It is modifier"
+            } else if (element.isModifier()) {
+                when(element.text) {
+                    KtTokens.LATEINIT_KEYWORD.value -> return """lateinit allows initializing a <a href="http://kotlinlang.org/docs/reference/properties.html#late-initialized-properties-and-variables">non-null property outside of a constructor</a>"""
+                    KtTokens.TAILREC_KEYWORD.value -> return """tailrec marks a function as <a href="http://kotlinlang.org/docs/reference/functions.html#tail-recursive-functions">tail-recursive</a> (allowing the compiler to replace recursion with iteration)"""
+                }
             }
 
             if (quickNavigation) {

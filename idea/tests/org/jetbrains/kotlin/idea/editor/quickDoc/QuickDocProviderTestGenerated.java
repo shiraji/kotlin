@@ -131,14 +131,12 @@ public class QuickDocProviderTestGenerated extends AbstractQuickDocProviderTest 
 
     @TestMetadata("Lateinit.kt")
     public void testLateinit() throws Exception {
-        String fileName = KotlinTestUtils.navigationMetadata("idea/testData/editor/quickDoc/Lateinit.kt");
-        doTest(fileName);
+        runTest("idea/testData/editor/quickDoc/Lateinit.kt");
     }
 
     @TestMetadata("LateinitName.kt")
     public void testLateinitName() throws Exception {
-        String fileName = KotlinTestUtils.navigationMetadata("idea/testData/editor/quickDoc/LateinitName.kt");
-        doTest(fileName);
+        runTest("idea/testData/editor/quickDoc/LateinitName.kt");
     }
 
     @TestMetadata("MethodFromStdLib.kt")
@@ -259,6 +257,16 @@ public class QuickDocProviderTestGenerated extends AbstractQuickDocProviderTest 
     @TestMetadata("Samples.kt")
     public void testSamples() throws Exception {
         runTest("idea/testData/editor/quickDoc/Samples.kt");
+    }
+
+    @TestMetadata("Tailrec.kt")
+    public void testTailrec() throws Exception {
+        runTest("idea/testData/editor/quickDoc/Tailrec.kt");
+    }
+
+    @TestMetadata("TailrecName.kt")
+    public void testTailrecName() throws Exception {
+        runTest("idea/testData/editor/quickDoc/TailrecName.kt");
     }
 
     @TestMetadata("TopLevelMethodFromJava.java")

@@ -655,3 +655,26 @@ private fun KotlinIndicesHelper.getClassesByName(expressionForPlatform: KtExpres
 private fun CallTypeAndReceiver<*, *>.toFilter() = { descriptor: DeclarationDescriptor ->
     callType.descriptorKindFilter.accepts(descriptor)
 }
+
+internal class ImportForMissingSameNameFunctionWithTypeParameterFix(expression: KtSimpleNameExpression) :
+    ImportFixBase<KtSimpleNameExpression>(expression, ImportForMissingSameNameFunctionWithTypeParameterFix) {
+    override val importNames = element?.mainReference?.resolvesByNames ?: emptyList()
+
+    override fun getCallTypeAndReceiver(): CallTypeAndReceiver<*, *>? = element?.let { CallTypeAndReceiver.detect(it) }
+
+    override fun fillCandidates(
+        name: String,
+        callTypeAndReceiver: CallTypeAndReceiver<*, *>,
+        bindingContext: BindingContext,
+        indicesHelper: KotlinIndicesHelper
+    ): List<DeclarationDescriptor> {
+        return emptyList()
+    }
+
+    companion object MyFactory : ImportFixBase.Factory() {
+        override fun createImportAction(diagnostic: Diagnostic): ImportFixBase<*>? {
+            val callExpression = diagnostic.psiElement.getStrictParentOfType<KtCallExpression>() ?: return null
+            return ImportForMissingSameNameFunctionWithTypeParameterFix(callExpression.getCallNameExpression()!!)
+        }
+    }
+}

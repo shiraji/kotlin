@@ -178,6 +178,9 @@ class QuickFixRegistrar : QuickFixContributor {
 
         CONFLICTING_IMPORT.registerFactory(RemovePsiElementSimpleFix.RemoveImportFactory)
 
+        WRONG_NUMBER_OF_TYPE_ARGUMENTS.registerFactory(ImportForMissingSameNameFunctionWithTypeParameterFix)
+//        WRONG_NUMBER_OF_TYPE_ARGUMENTS.registerFactory(*CreateCallableFromCallActionFactory.INSTANCES)
+
         SUPERTYPE_NOT_INITIALIZED.registerFactory(SuperClassNotInitialized)
         FUNCTION_CALL_EXPECTED.registerFactory(ChangeToFunctionInvocationFix)
         FUNCTION_EXPECTED.registerFactory(ChangeToPropertyAccessFix)
